@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#172033" />
-  <title>Sufi Thread Inventory</title>
+  <title>Inventory App</title>
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -44,15 +44,15 @@
 </head>
 <body>
 <header>
-  <h1>Sufi Thread Inventory</h1>
-  <div>Administrator: kj@sufithread.com</div>
+  <h1>Inventory App</h1>
+  <div>Administrator login</div>
 </header>
 
 <div class="wrap">
   <div id="authCard" class="card">
     <h2>Administrator Login</h2>
     <label>Email</label>
-    <input id="email" type="email" value="kj@sufithread.com">
+    <input id="email" type="email" placeholder="your admin email">
     <label>Password</label>
     <input id="password" type="password" placeholder="Create or enter your password">
     <button class="primary" onclick="signIn()">Sign In</button>
@@ -130,9 +130,10 @@
 </div>
 
 <script>
-const SUPABASE_URL = "https://wfoputgrjortobtpczce.supabase.co/rest/v1/";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmb3B1dGdyam9ydG9idHBjemNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NzI4MDIsImV4cCI6MjA5OTU0ODgwMn0.ITHlM1cLHPdHX25lmxsA_jfebUu0G3Q56VKyhg3u6BQ";
-const ADMIN_EMAIL = "kj@sufithread.com";
+// Replace these values with your Supabase project settings before deploying.
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY";
+const ADMIN_EMAIL = "admin@yourdomain.com";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function status(id,msg,ok=true){
