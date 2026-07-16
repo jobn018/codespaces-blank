@@ -1981,10 +1981,7 @@ async function buildTransactionItemFromValues(txType,productId,size,qty,unitPric
   const product=productsCache.find(p=>p.id===productId);
   if(!product) throw new Error("Selected product not found.");
 
-  const {data:existingTxs,error:txError}=await sb.from("stock_transactions").select("size,transaction_type,quantity").eq("product_id",productId);
-  if(txError) throw txError;
-
-  const currentSizes=getSizeStock(product.size_details||product.article_details, existingTxs||[]);
+  const currentSizes=normalizeSizeStock(product.size_details||product.article_details);
   const pendingDelta=transactionOrderItems
     .filter(item=>item.product_id===productId && item.size===size)
     .reduce((sum,item)=>sum + (item.transaction_type==='IN' ? Number(item.quantity||0) : -Number(item.quantity||0)),0);
@@ -2317,39 +2314,8 @@ async function updateManagedArticle(){
     const sizeList=getSelectedSizesForPrefix("edit");
     if(!sizeList.length) throw new Error("Select at least one size and enter its quantity.");
     const desiredStockBySize=Object.fromEntries(sizeList.map(s=>[s.key,Number(s.value||0)]));
-
-    const {data:existingTxs,error:txError}=await sb
-      .from("stock_transactions")
-      .select("size,transaction_type,quantity")
-      .eq("product_id",targetId);
-    if(txError) throw txError;
-
-    const txDeltaBySize={};
-    (existingTxs||[]).forEach((tx)=>{
-      if(!tx.size) return;
-      const delta=tx.transaction_type==='IN' ? Number(tx.quantity||0) : -Number(tx.quantity||0);
-      txDeltaBySize[tx.size]=(txDeltaBySize[tx.size]||0)+delta;
-    });
-
-    const allSizes=new Set([...Object.keys(desiredStockBySize), ...Object.keys(txDeltaBySize)]);
-    const baseStockBySize={};
-    allSizes.forEach((size)=>{
-      const desiredQty=Number(desiredStockBySize[size]||0);
-      const txDelta=Number(txDeltaBySize[size]||0);
-      const minAllowedCurrent=txDelta>0 ? txDelta : 0;
-      if(desiredQty<minAllowedCurrent){
-        throw new Error(`Cannot set ${size} below ${minAllowedCurrent} because of existing stock transactions.`);
-      }
-      const baseQty=desiredQty-txDelta;
-      if(baseQty>0) baseStockBySize[size]=baseQty;
-    });
-
-    if(!Object.keys(baseStockBySize).length){
-      throw new Error("Resulting base stock is empty. Increase at least one size quantity.");
-    }
-
-    const articleDetails=Object.entries(baseStockBySize).map(([k,v])=>`${k}:${v}`).join(", ");
-    const openingStockValue=Object.values(baseStockBySize).reduce((sum,v)=>sum+Number(v||0),0);
+    const articleDetails=Object.entries(desiredStockBySize).map(([k,v])=>`${k}:${v}`).join(", ");
+    const openingStockValue=Object.values(desiredStockBySize).reduce((sum,v)=>sum+Number(v||0),0);
     const updateRow={
       sku,
       name,
@@ -2357,7 +2323,7 @@ async function updateManagedArticle(){
       colour:document.getElementById("editColour").value.trim(),
       size:'',
       article_details:articleDetails,
-      size_details:baseStockBySize,
+      size_details:desiredStockBySize,
       opening_stock:openingStockValue,
       cost_price:Number(document.getElementById("editCostPrice").value||0),
       selling_price:Number(document.getElementById("editSellingPrice").value||0),
@@ -2423,15 +2389,7 @@ async function updateSizeOptions(){
     return;
   }
 
-  const baseSizes=(typeof product.size_details==='object' && product.size_details)
-    ? product.size_details
-    : parseArticleDetails(product.article_details);
-
-  let sizes={...baseSizes};
-  const {data:txs,error}=await sb.from("stock_transactions").select("size,transaction_type,quantity").eq("product_id",productId);
-  if(!error){
-    sizes=getSizeStock(baseSizes,txs||[]);
-  }
+  const sizes=normalizeSizeStock(product.size_details||product.article_details);
 
   Object.keys(sizes).forEach(size=>{
     const opt=document.createElement("option");
@@ -2447,14 +2405,37 @@ async function updateSizeOptions(){
   }
 }
 
-function getSizeStock(details, transactions){
-  const stock = typeof details==='object' && details ? {...details} : parseArticleDetails(details);
-  (transactions||[]).forEach(tx=>{
-    if(!tx.size) return;
-    const delta=tx.transaction_type==='IN'?Number(tx.quantity||0):-Number(tx.quantity||0);
-    stock[tx.size]=(stock[tx.size]||0)+delta;
+function normalizeSizeStock(details){
+  return typeof details==='object' && details ? {...details} : parseArticleDetails(details);
+}
+
+async function applyTransactionRowsToProducts(rows){
+  const deltasByProduct=new Map();
+  (rows||[]).forEach(row=>{
+    if(!row.product_id || !row.size) return;
+    const productDeltas=deltasByProduct.get(row.product_id) || {};
+    const delta=row.transaction_type==='IN' ? Number(row.quantity||0) : -Number(row.quantity||0);
+    productDeltas[row.size]=(productDeltas[row.size]||0)+delta;
+    deltasByProduct.set(row.product_id,productDeltas);
   });
-  return stock;
+
+  for(const [productId,sizeDeltas] of deltasByProduct.entries()){
+    const {data:product,error}=await sb.from("products").select("id,size_details,opening_stock,article_details").eq("id",productId).maybeSingle();
+    if(error) throw error;
+    if(!product) continue;
+
+    const currentStock=normalizeSizeStock(product.size_details||product.article_details);
+    Object.entries(sizeDeltas).forEach(([size,delta])=>{
+      currentStock[size]=Math.max(0,Number(currentStock[size]||0)+Number(delta||0));
+    });
+    const currentOpening=Object.values(currentStock).reduce((sum,value)=>sum+Number(value||0),0);
+    const {error:updateError}=await sb.from("products").update({
+      size_details:currentStock,
+      article_details:Object.entries(currentStock).map(([k,v])=>`${k}:${v}`).join(", "),
+      opening_stock:currentOpening
+    }).eq("id",productId);
+    if(updateError) throw updateError;
+  }
 }
 
 function normalizeArticleType(value){
@@ -2579,6 +2560,8 @@ async function saveTransaction(){
     const {error}=await sb.from("stock_transactions").insert(rows);
     if(error) throw error;
 
+    await applyTransactionRowsToProducts(rows);
+
     status("txStatus",txType==='OUT' ? `Stock Out order saved (${rows.length} item${rows.length===1?"":"s"}). Delivery label is ready to print.` : `Stock In order saved (${rows.length} item${rows.length===1?"":"s"}).`);
     if(txType==='OUT'){
       const productById=productsCache.reduce((acc,item)=>{acc[item.id]=item;return acc;},{});
@@ -2604,21 +2587,15 @@ async function saveTransaction(){
 }
 
 async function loadInventory(){
-  const [prodRes, txRes] = await Promise.all([
-    sb.from("products").select("id,sku,name,category,colour,size,article_details,size_details,opening_stock,cost_price,selling_price,reorder_level,image_url,gallery_images").order("name"),
-    sb.from("stock_transactions").select("product_id,size,transaction_type,quantity")
-  ]);
+  const prodRes = await sb.from("products").select("id,sku,name,category,colour,size,article_details,size_details,opening_stock,cost_price,selling_price,reorder_level,image_url,gallery_images").order("name");
   const list=document.getElementById("inventoryList");
   if(prodRes.error){list.innerHTML=`<p>${prodRes.error.message}</p>`;return}
-  if(txRes.error){list.innerHTML=`<p>${txRes.error.message}</p>`;return}
-  const transactions=txRes.data||[];
   inventoryProductsCache=(prodRes.data||[]).map(p=>{
-    const txForProduct=transactions.filter(t=>t.product_id===p.id);
-    const sizeStock=getSizeStock(p.size_details||p.article_details, txForProduct);
+    const sizeStock=normalizeSizeStock(p.size_details||p.article_details);
     return {
       ...p,
       size_stock:sizeStock,
-      current_stock: Number(p.opening_stock || 0) + txForProduct.reduce((sum,t)=>sum + (t.transaction_type==='IN' ? Number(t.quantity||0) : -Number(t.quantity||0)), 0)
+      current_stock: Object.values(sizeStock).reduce((sum,value)=>sum+Number(value||0),0)
     };
   });
 
