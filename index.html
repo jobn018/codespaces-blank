@@ -2494,11 +2494,12 @@ async function saveTransaction(){
     }
 
     const txType=transactionOrderItems[0].transaction_type;
+    const customerName=document.getElementById("txParty").value.trim();
     const customerPhone=document.getElementById("txPhone")?.value.trim()||"";
     const customerEmail=document.getElementById("txEmail")?.value.trim()||"";
     const customerAddress=document.getElementById("txAddress")?.value.trim()||"";
-    if(txType==='OUT' && (!customerPhone || !customerAddress)){
-      throw new Error("For Stock Out, add customer phone and address for the delivery label.");
+    if(txType==='OUT' && (!customerName || !customerPhone || !customerAddress)){
+      throw new Error("For Stock Out, add customer name, phone, and address.");
     }
 
     const rows=transactionOrderItems.map(item=>({
@@ -2507,7 +2508,7 @@ async function saveTransaction(){
       transaction_type:item.transaction_type,
       quantity:item.quantity,
       unit_price:Number(item.unit_price||0),
-      party:document.getElementById("txParty").value.trim(),
+      party:customerName,
       reference:document.getElementById("txReference").value.trim(),
       notes:item.notes||"",
       phone:customerPhone,
@@ -2527,7 +2528,7 @@ async function saveTransaction(){
       prefillDeliveryFromTransaction({
         quantity:1,
         size:"Mixed",
-        party:document.getElementById("txParty").value.trim(),
+        party:customerName,
         reference:document.getElementById("txReference").value.trim(),
         notes:transactionOrderItems.map(item=>item.notes).filter(Boolean).join(" | "),
         phone:customerPhone,
@@ -2719,11 +2720,14 @@ async function loadCustomers(){
       lastSeen:tx.created_at,
       items:[],
       totalQty:0,
-      totalOrders:0
+      totalOrders:0,
+      totalTransactions:0
     };
     current.lastSeen=tx.created_at;
-    current.totalQty+=Number(tx.quantity||0);
-    current.totalOrders+=1;
+    const txQty=Number(tx.quantity||0);
+    current.totalQty+=txQty;
+    current.totalOrders+=txQty;
+    current.totalTransactions+=1;
     current.items.push({
       id:tx.id,
       product_id:tx.product_id,
@@ -2793,7 +2797,7 @@ function renderCustomers(){
           <strong>${customer.name}</strong>
           <div class="muted">${customer.phone || "No phone"}</div>
         </div>
-        <div class="muted">${customer.totalOrders} item${customer.totalOrders===1?"":"s"}</div>
+        <div class="muted">${customer.totalQty} article${customer.totalQty===1?"":"s"}</div>
       </div>
     `;
     card.onclick=()=>{
@@ -2820,8 +2824,8 @@ function renderCustomers(){
   document.getElementById("customerDetailPhone").textContent=`Phone: ${selected.phone || "-"}`;
   document.getElementById("customerDetailEmail").textContent=`Email: ${selected.email || "-"}`;
   document.getElementById("customerDetailAddress").textContent=`Address: ${selected.address || "-"}`;
-  document.getElementById("customerDetailCount").textContent=`Total items: ${selected.totalQty}`;
-  document.getElementById("customerDetailOrders").textContent=`Total purchases: ${selected.totalOrders}`;
+  document.getElementById("customerDetailCount").textContent=`Total articles: ${selected.totalQty}`;
+  document.getElementById("customerDetailOrders").textContent=`Transactions: ${selected.totalTransactions || selected.items.length}`;
   document.getElementById("customerDetailLast").textContent=`Last seen: ${new Date(selected.lastSeen).toLocaleString()}`;
 
   const itemsBox=document.getElementById("customerItems");
@@ -2842,7 +2846,7 @@ function renderCustomers(){
           <span class="customer-article-badge">${normalizeArticleType(item.category)}</span>
           <span class="customer-article-badge">Size ${item.size || "-"}</span>
         </div>
-        <div class="muted">Qty: ${item.quantity}</div>
+        <div class="muted">Articles bought: ${item.quantity}</div>
         <div class="muted">Date: ${new Date(item.created_at).toLocaleString()}</div>
         <div class="muted">${item.reference ? `Ref: ${item.reference}` : ""}</div>
         <div class="muted">${item.notes ? item.notes : ""}</div>
