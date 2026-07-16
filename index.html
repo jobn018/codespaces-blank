@@ -1060,6 +1060,7 @@
     <input id="password" type="password" placeholder="Create or enter your password">
     <button class="primary" onclick="signIn()">Sign In</button>
     <button class="secondary" onclick="signUp()">Create Admin Account</button>
+    <button class="secondary" onclick="sendResetLink()">Reset Password Email</button>
     <div id="authStatus" class="status"></div>
   </div>
 
@@ -1407,10 +1408,23 @@ async function signIn(){
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value;
   const {error}=await sb.auth.signInWithPassword({email,password});
-  if(error) return status("authStatus",error.message,false);
+  if(error){
+    if(/invalid login credentials/i.test(error.message||"")){
+      return status("authStatus","Invalid login. Use Create Admin Account first or Reset Password Email.",false);
+    }
+    return status("authStatus",error.message,false);
+  }
   document.getElementById("authCard").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   await Promise.all([loadProducts(),loadDashboard(),loadCustomers()]);
+}
+
+async function sendResetLink(){
+  const email=document.getElementById("email").value.trim();
+  if(email!==ADMIN_EMAIL) return status("authStatus","Use the approved admin email.",false);
+  const {error}=await sb.auth.resetPasswordForEmail(email);
+  if(error) return status("authStatus",error.message,false);
+  status("authStatus","Password reset email sent. Check your inbox.");
 }
 
 async function signOut(){await sb.auth.signOut();location.reload()}
