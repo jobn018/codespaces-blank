@@ -1946,6 +1946,20 @@ function clearTransactionOrder(showMessage=false){
   if(showMessage) status("txStatus","Order cleared.");
 }
 
+function resetTransactionFormAfterSave(){
+  ["txParty","txReference","txPhone","txEmail","txAddress","txNotes"].forEach((id)=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+  const txQty=document.getElementById("txQty");
+  if(txQty) txQty.value="";
+  const txPrice=document.getElementById("txPrice");
+  if(txPrice) txPrice.value="";
+  clearTransactionOrder();
+  bulkArticleRows=[];
+  renderBulkArticleRows();
+}
+
 async function buildCurrentTransactionItem(){
   const txType=document.getElementById("txType").value;
   const productId=document.getElementById("txProduct").value;
@@ -2535,12 +2549,9 @@ async function saveTransaction(){
         email:customerEmail,
         address:customerAddress
       },{name:itemSummary});
-      showTab("delivery");
     }
 
-    clearTransactionOrder();
-    document.getElementById("txQty").value="";
-    document.getElementById("txNotes").value="";
+    resetTransactionFormAfterSave();
     await Promise.all([loadDashboard(), loadInventory(), loadCustomers()]);
     await updateSizeOptions();
   }catch(e){status("txStatus",e.message,false)}
