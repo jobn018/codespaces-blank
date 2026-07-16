@@ -2305,6 +2305,7 @@ function populateManageForm(productId){
 async function updateManagedArticle(){
   try{
     if(!editingArticleId) throw new Error("Select an article first.");
+    const targetId=editingArticleId;
     const sku=document.getElementById("editSku").value.trim();
     const name=document.getElementById("editProductName").value.trim();
     if(!sku||!name) throw new Error("SKU and Product Name are required.");
@@ -2329,10 +2330,18 @@ async function updateManagedArticle(){
     if(imageFile) updateRow.image_url=await uploadImage(imageFile,sku);
     const galleryFiles=document.getElementById("editGalleryImages").files;
     if(galleryFiles && galleryFiles.length) updateRow.gallery_images=await uploadImages(galleryFiles,sku);
-    const {error}=await sb.from("products").update(updateRow).eq("id",editingArticleId);
+    const {data:updated,error}=await sb
+      .from("products")
+      .update(updateRow)
+      .eq("id",targetId)
+      .select("id")
+      .maybeSingle();
     if(error) throw error;
+    if(!updated) throw new Error("Article update was not applied. Please refresh and try again.");
     status("manageStatus","Article updated successfully.");
     await Promise.all([loadProducts(),loadDashboard(),loadInventory()]);
+    const refreshed=inventoryProductsCache.find(product=>product.id===targetId);
+    if(refreshed) populateManageFormFromProduct(refreshed);
     renderManageArticles();
   }catch(e){status("manageStatus",e.message,false)}
 }
