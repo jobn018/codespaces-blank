@@ -928,7 +928,7 @@
 
     .bulk-row-grid{
       display:grid;
-      grid-template-columns:1.5fr 1fr 1fr auto;
+      grid-template-columns:1.4fr .9fr .9fr 1fr auto;
       gap:10px;
       align-items:end;
     }
@@ -1826,6 +1826,10 @@ function renderBulkArticleRows(){
           <label>Price</label>
           <input type="number" min="0" step="0.01" value="${Number(row.unit_price||0)}" oninput="updateBulkArticlePrice('${row.id}',this.value)">
         </div>
+        <div>
+          <label>No. of Articles</label>
+          <input type="number" min="1" step="1" value="${Number(row.quantity||1)}" oninput="updateBulkArticleQuantity('${row.id}',this.value)">
+        </div>
         <button type="button" class="bulk-remove-btn" onclick="removeBulkArticleRow('${row.id}')">Remove</button>
       </div>
     `;
@@ -1840,7 +1844,8 @@ function addBulkArticleRow(shouldRender=true){
     id:createBulkRowId(),
     product_id:firstProduct?.id||"",
     size:sizeList[0]||"",
-    unit_price:Number(document.getElementById("txPrice")?.value||0)
+    unit_price:Number(document.getElementById("txPrice")?.value||0),
+    quantity:1
   });
   if(shouldRender) renderBulkArticleRows();
 }
@@ -1867,6 +1872,11 @@ function updateBulkArticlePrice(rowId,value){
   bulkArticleRows=bulkArticleRows.map(row=>row.id===rowId?{...row,unit_price:Number(value||0)}:row);
 }
 
+function updateBulkArticleQuantity(rowId,value){
+  const qty=Math.max(1,Number(value||1));
+  bulkArticleRows=bulkArticleRows.map(row=>row.id===rowId?{...row,quantity:qty}:row);
+}
+
 async function addAllBulkRowsToOrder(){
   try{
     const txType=document.getElementById("txType")?.value;
@@ -1880,7 +1890,8 @@ async function addAllBulkRowsToOrder(){
     let added=0;
     for(const row of bulkArticleRows){
       if(!row.product_id || !row.size) throw new Error("Each article row needs product and size.");
-      const item=await buildTransactionItemFromValues(txType,row.product_id,row.size,1,Number(row.unit_price||0),sharedNotes);
+      const rowQty=Math.max(1,Number(row.quantity||1));
+      const item=await buildTransactionItemFromValues(txType,row.product_id,row.size,rowQty,Number(row.unit_price||0),sharedNotes);
       transactionOrderItems.push(item);
       added+=1;
     }
@@ -1911,7 +1922,7 @@ function renderTransactionOrder(){
     const row=document.createElement("div");
     row.className="order-cart-row";
     const details=item.transaction_type==='OUT'
-      ? `Size ${item.size} · 1 article · Price ${Number(item.unit_price||0).toFixed(2)}`
+      ? `Size ${item.size} · ${item.quantity} article${Number(item.quantity)===1?"":"s"} · Price ${Number(item.unit_price||0).toFixed(2)}`
       : `Size ${item.size} · Qty ${item.quantity} · Price ${Number(item.unit_price||0).toFixed(2)}`;
     row.innerHTML=`
       <div>
