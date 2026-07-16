@@ -1542,6 +1542,7 @@ let customerManageMode=false;
 let isRecoveryMode=false;
 let transactionOrderItems=[];
 let bulkArticleRows=[];
+let lastSavedCustomerKey="";
 
 function getAuthRedirectUrl(){
   return `${location.origin}${location.pathname}`;
@@ -2543,6 +2544,8 @@ async function saveTransaction(){
       throw new Error("For Stock Out, add customer name, phone, and address.");
     }
 
+    lastSavedCustomerKey=[customerName,customerPhone,customerEmail,customerAddress].join("|||");
+
     const rows=transactionOrderItems.map(item=>({
       product_id:item.product_id,
       size:item.size,
@@ -2789,6 +2792,9 @@ async function loadCustomers(){
   }
   if(!selectedCustomerKey && customerEntriesCache.length){
     selectedCustomerKey=customerEntriesCache[0].key;
+  }
+  if(lastSavedCustomerKey && customerEntriesCache.some(customer=>customer.key===lastSavedCustomerKey)){
+    selectedCustomerKey=lastSavedCustomerKey;
   }
 }
 
