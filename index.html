@@ -2316,8 +2316,40 @@ async function updateManagedArticle(){
     if(!sku||!name) throw new Error("SKU and Product Name are required.");
     const sizeList=getSelectedSizesForPrefix("edit");
     if(!sizeList.length) throw new Error("Select at least one size and enter its quantity.");
-    const articleDetails=sizeList.map(s=>`${s.key}:${s.value}`).join(", ");
-    const openingStockValue=sizeList.reduce((sum,s)=>sum+s.value,0);
+    const desiredStockBySize=Object.fromEntries(sizeList.map(s=>[s.key,Number(s.value||0)]));
+
+    const {data:existingTxs,error:txError}=await sb
+      .from("stock_transactions")
+      .select("size,transaction_type,quantity")
+      .eq("product_id",targetId);
+    if(txError) throw txError;
+
+    const txDeltaBySize={};
+    (existingTxs||[]).forEach((tx)=>{
+      if(!tx.size) return;
+      const delta=tx.transaction_type==='IN' ? Number(tx.quantity||0) : -Number(tx.quantity||0);
+      txDeltaBySize[tx.size]=(txDeltaBySize[tx.size]||0)+delta;
+    });
+
+    const allSizes=new Set([...Object.keys(desiredStockBySize), ...Object.keys(txDeltaBySize)]);
+    const baseStockBySize={};
+    allSizes.forEach((size)=>{
+      const desiredQty=Number(desiredStockBySize[size]||0);
+      const txDelta=Number(txDeltaBySize[size]||0);
+      const minAllowedCurrent=txDelta>0 ? txDelta : 0;
+      if(desiredQty<minAllowedCurrent){
+        throw new Error(`Cannot set ${size} below ${minAllowedCurrent} because of existing stock transactions.`);
+      }
+      const baseQty=desiredQty-txDelta;
+      if(baseQty>0) baseStockBySize[size]=baseQty;
+    });
+
+    if(!Object.keys(baseStockBySize).length){
+      throw new Error("Resulting base stock is empty. Increase at least one size quantity.");
+    }
+
+    const articleDetails=Object.entries(baseStockBySize).map(([k,v])=>`${k}:${v}`).join(", ");
+    const openingStockValue=Object.values(baseStockBySize).reduce((sum,v)=>sum+Number(v||0),0);
     const updateRow={
       sku,
       name,
@@ -2325,7 +2357,7 @@ async function updateManagedArticle(){
       colour:document.getElementById("editColour").value.trim(),
       size:'',
       article_details:articleDetails,
-      size_details:Object.fromEntries(sizeList.map(s=>[s.key,s.value])),
+      size_details:baseStockBySize,
       opening_stock:openingStockValue,
       cost_price:Number(document.getElementById("editCostPrice").value||0),
       selling_price:Number(document.getElementById("editSellingPrice").value||0),
