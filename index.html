@@ -872,6 +872,134 @@
       line-height:1.4;
     }
 
+    .tx-actions{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .tx-actions button{
+      margin-top:0;
+      width:100%;
+    }
+
+    .bulk-article-builder{
+      margin-top:14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fffaf7;
+      padding:12px;
+    }
+
+    .bulk-article-builder.inactive{
+      opacity:.72;
+      background:#f7f1ed;
+    }
+
+    .bulk-article-builder h3{
+      margin:0;
+      font-size:18px;
+      color:var(--navy);
+    }
+
+    .bulk-builder-actions{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .bulk-builder-actions button{margin-top:0;width:100%}
+
+    .bulk-article-rows{
+      margin-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .bulk-article-row{
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      padding:10px;
+    }
+
+    .bulk-row-grid{
+      display:grid;
+      grid-template-columns:1.5fr 1fr 1fr auto;
+      gap:10px;
+      align-items:end;
+    }
+
+    .bulk-remove-btn{
+      width:auto;
+      margin-top:0;
+      padding:10px 12px;
+      background:#7a2731;
+      color:#fff;
+      border:0;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .order-cart{
+      margin-top:14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fffaf7;
+      padding:12px;
+    }
+
+    .order-cart h3{
+      margin:0;
+      font-size:18px;
+      color:var(--navy);
+    }
+
+    .order-cart-meta{
+      margin-top:4px;
+      color:#6a5b64;
+      font-size:13px;
+    }
+
+    .order-cart-items{
+      margin-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .order-cart-row{
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      padding:9px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .order-cart-line{font-weight:700;color:#3c3037}
+
+    .order-cart-sub{font-size:12px;color:#6e6068;margin-top:2px}
+
+    .order-cart-row button{
+      width:auto;
+      margin-top:0;
+      padding:8px 10px;
+      font-size:12px;
+      background:#7a2731;
+      color:#fff;
+      border-radius:8px;
+      border:0;
+      cursor:pointer;
+    }
+
     .bottom-nav{
       position:fixed;
       left:50%;
@@ -1028,6 +1156,9 @@
       .hero-dress{font-size:51px}
       .administrator{font-size:44px}
       .grid{grid-template-columns:1fr}
+      .tx-actions{grid-template-columns:1fr}
+      .bulk-builder-actions{grid-template-columns:1fr}
+      .bulk-row-grid{grid-template-columns:1fr}
       .size-grid{grid-template-columns:repeat(2,1fr)}
       .card{padding:16px;border-radius:17px}
       .bottom-nav button{font-size:14px}
@@ -1059,8 +1190,10 @@
     <label>Password</label>
     <input id="password" type="password" placeholder="Create or enter your password">
     <button class="primary" onclick="signIn()">Sign In</button>
+    <button id="recoveryBtn" class="primary hidden" onclick="completePasswordRecovery()">Set New Password</button>
     <button class="secondary" onclick="signUp()">Create Admin Account</button>
     <button class="secondary" onclick="sendResetLink()">Reset Password Email</button>
+    <button class="secondary" onclick="resendConfirmationEmail()">Resend Confirmation Email</button>
     <div id="authStatus" class="status"></div>
   </div>
 
@@ -1125,13 +1258,13 @@
     <section id="transaction" class="card hidden">
       <div class="section-title"><h2>Stock In / Stock Out</h2></div>
       <label>Transaction Type</label>
-      <select id="txType" onchange="toggleTransactionCustomerFields()"><option value="IN">Stock In</option><option value="OUT">Stock Out</option></select>
-      <label>Product</label>
+      <select id="txType" onchange="handleTransactionTypeChange()"><option value="IN">Stock In</option><option value="OUT">Stock Out</option></select>
+      <label id="txProductLabel">Product</label>
       <select id="txProduct" onchange="updateSizeOptions()"></select>
-      <label>Size</label>
+      <label id="txSizeLabel">Size</label>
       <select id="txSize"></select>
-      <div class="grid">
-        <div><label>Quantity</label><input id="txQty" type="number" min="1"></div>
+      <div id="txBaseInputs" class="grid">
+        <div id="txQtyWrap"><label>Quantity</label><input id="txQty" type="number" min="1"></div>
         <div><label>Price / Unit Cost</label><input id="txPrice" type="number" min="0" step="0.01"></div>
       </div>
       <label>Supplier / Customer Name</label><input id="txParty">
@@ -1145,7 +1278,25 @@
       </div>
 
       <label>Notes</label><textarea id="txNotes"></textarea>
-      <button class="primary" onclick="saveTransaction()">Save Transaction</button>
+      <div id="bulkArticleBuilder" class="bulk-article-builder">
+        <h3>Add Multiple Articles At Once</h3>
+        <div id="bulkModeHint" class="order-cart-meta">Switch Transaction Type to Stock Out to use this section.</div>
+        <div class="bulk-builder-actions">
+          <button id="bulkAddRowBtn" class="secondary" onclick="addBulkArticleRow()">Add Article Row</button>
+          <button id="bulkAddAllBtn" class="primary" onclick="addAllBulkRowsToOrder()">Add All Rows To Current Order</button>
+        </div>
+        <div id="bulkArticleRows" class="bulk-article-rows"></div>
+      </div>
+      <div class="tx-actions">
+        <button id="txAddSingleBtn" class="secondary" onclick="addTransactionItem()">Add Item To Order</button>
+        <button class="primary" onclick="saveTransaction()">Save Complete Order</button>
+        <button class="secondary" onclick="clearTransactionOrder(true)">Clear Order</button>
+      </div>
+      <div id="orderCart" class="order-cart">
+        <h3>Current Order</h3>
+        <div id="orderCartMeta" class="order-cart-meta">No items added yet.</div>
+        <div id="orderCartItems" class="order-cart-items"></div>
+      </div>
       <div id="txStatus" class="status"></div>
     </section>
 
@@ -1388,6 +1539,31 @@ let selectedCustomerKey="";
 let customerSearchTerm="";
 let editingCustomerKey="";
 let customerManageMode=false;
+let isRecoveryMode=false;
+let transactionOrderItems=[];
+let bulkArticleRows=[];
+
+function getAuthRedirectUrl(){
+  return `${location.origin}${location.pathname}`;
+}
+
+function setRecoveryMode(enabled){
+  isRecoveryMode=enabled;
+  const signInBtn=document.querySelector("#authCard button.primary");
+  const recoveryBtn=document.getElementById("recoveryBtn");
+  if(signInBtn) signInBtn.classList.toggle("hidden",enabled);
+  if(recoveryBtn) recoveryBtn.classList.toggle("hidden",!enabled);
+}
+
+function detectRecoveryMode(){
+  const hash=location.hash.startsWith("#")?location.hash.slice(1):location.hash;
+  const hashParams=new URLSearchParams(hash);
+  const isRecovery=hashParams.get("type")==="recovery" || hashParams.has("access_token");
+  setRecoveryMode(isRecovery);
+  if(isRecovery){
+    status("authStatus","Enter a new password, then click Set New Password.");
+  }
+}
 
 function status(id,msg,ok=true){
   const el=document.getElementById(id);
@@ -1395,13 +1571,36 @@ function status(id,msg,ok=true){
   el.textContent=msg;
 }
 
+function toFriendlyAuthError(error,context){
+  const msg=(error?.message||"").toLowerCase();
+  if(!msg) return "Request failed. Please try again.";
+  if(msg.includes("email not confirmed")) return "Email not confirmed yet. Use Resend Confirmation Email, then check inbox/spam.";
+  if(msg.includes("user already registered")) return "This admin email is already registered. Use Sign In or Reset Password Email.";
+  if(msg.includes("password")) return "Password must be at least 6 characters.";
+  if(msg.includes("rate limit") || msg.includes("too many requests")) return "Too many requests. Wait 1-2 minutes and try again.";
+  if(msg.includes("invalid login credentials")) return "Invalid login. If account exists, use Reset Password Email.";
+  if(msg.includes("email address") && context==="resend") return "Email provider is not sending. Check Supabase Auth > Email settings and SMTP.";
+  return error.message;
+}
+
 async function signUp(){
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value;
+  if(!password || password.length<6) return status("authStatus","Password must be at least 6 characters.",false);
   if(email!==ADMIN_EMAIL) return status("authStatus","Use the approved admin email.",false);
-  const {error}=await sb.auth.signUp({email,password});
-  if(error) return status("authStatus",error.message,false);
-  status("authStatus","Account created. Check your email if confirmation is enabled.");
+  const {data,error}=await sb.auth.signUp({
+    email,
+    password,
+    options:{emailRedirectTo:getAuthRedirectUrl()}
+  });
+  if(error) return status("authStatus",toFriendlyAuthError(error,"signup"),false);
+  if(data?.session){
+    document.getElementById("authCard").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    await Promise.all([loadProducts(),loadDashboard(),loadCustomers()]);
+    return;
+  }
+  status("authStatus","Account created. Check inbox/spam for confirmation email. If not received, verify Supabase Auth email settings.");
 }
 
 async function signIn(){
@@ -1409,10 +1608,7 @@ async function signIn(){
   const password=document.getElementById("password").value;
   const {error}=await sb.auth.signInWithPassword({email,password});
   if(error){
-    if(/invalid login credentials/i.test(error.message||"")){
-      return status("authStatus","Invalid login. Use Create Admin Account first or Reset Password Email.",false);
-    }
-    return status("authStatus",error.message,false);
+    return status("authStatus",toFriendlyAuthError(error,"signin"),false);
   }
   document.getElementById("authCard").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
@@ -1422,9 +1618,31 @@ async function signIn(){
 async function sendResetLink(){
   const email=document.getElementById("email").value.trim();
   if(email!==ADMIN_EMAIL) return status("authStatus","Use the approved admin email.",false);
-  const {error}=await sb.auth.resetPasswordForEmail(email);
-  if(error) return status("authStatus",error.message,false);
-  status("authStatus","Password reset email sent. Check your inbox.");
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:getAuthRedirectUrl()});
+  if(error) return status("authStatus",toFriendlyAuthError(error,"reset"),false);
+  status("authStatus","Password reset email sent. Check inbox/spam. The link will return to this page.");
+}
+
+async function resendConfirmationEmail(){
+  const email=document.getElementById("email").value.trim();
+  if(email!==ADMIN_EMAIL) return status("authStatus","Use the approved admin email.",false);
+  const {error}=await sb.auth.resend({
+    type:"signup",
+    email,
+    options:{emailRedirectTo:getAuthRedirectUrl()}
+  });
+  if(error) return status("authStatus",toFriendlyAuthError(error,"resend"),false);
+  status("authStatus","Confirmation email resent. Check inbox/spam/promotions.");
+}
+
+async function completePasswordRecovery(){
+  const password=document.getElementById("password").value;
+  if(!password || password.length<6) return status("authStatus","Enter a new password with at least 6 characters.",false);
+  const {error}=await sb.auth.updateUser({password});
+  if(error) return status("authStatus",toFriendlyAuthError(error,"recovery"),false);
+  setRecoveryMode(false);
+  history.replaceState({},document.title,getAuthRedirectUrl());
+  status("authStatus","Password updated. You can now sign in.");
 }
 
 async function signOut(){await sb.auth.signOut();location.reload()}
@@ -1515,7 +1733,270 @@ async function handleQuickMenuAction(action){
 function toggleTransactionCustomerFields(){
   const isStockOut=document.getElementById("txType")?.value==="OUT";
   const box=document.getElementById("customerDeliveryFields");
+  const qtyWrap=document.getElementById("txQtyWrap");
+  const qtyInput=document.getElementById("txQty");
+  const txProduct=document.getElementById("txProduct");
+  const txProductLabel=document.getElementById("txProductLabel");
+  const txSize=document.getElementById("txSize");
+  const txSizeLabel=document.getElementById("txSizeLabel");
+  const txBaseInputs=document.getElementById("txBaseInputs");
+  const txAddSingleBtn=document.getElementById("txAddSingleBtn");
+  const bulkBuilder=document.getElementById("bulkArticleBuilder");
+  const bulkModeHint=document.getElementById("bulkModeHint");
+  const bulkAddRowBtn=document.getElementById("bulkAddRowBtn");
+  const bulkAddAllBtn=document.getElementById("bulkAddAllBtn");
   if(box) box.classList.toggle("hidden",!isStockOut);
+  if(qtyWrap) qtyWrap.classList.toggle("hidden",isStockOut);
+  if(qtyInput && isStockOut) qtyInput.value=1;
+  if(txProduct) txProduct.classList.toggle("hidden",isStockOut);
+  if(txProductLabel) txProductLabel.classList.toggle("hidden",isStockOut);
+  if(txSize) txSize.classList.toggle("hidden",isStockOut);
+  if(txSizeLabel) txSizeLabel.classList.toggle("hidden",isStockOut);
+  if(txBaseInputs) txBaseInputs.classList.toggle("hidden",isStockOut);
+  if(txAddSingleBtn) txAddSingleBtn.classList.toggle("hidden",isStockOut);
+  if(bulkBuilder) bulkBuilder.classList.toggle("inactive",!isStockOut);
+  if(bulkModeHint) bulkModeHint.textContent=isStockOut
+    ? "Add all article rows in one click for this customer."
+    : "Switch Transaction Type to Stock Out to use this section.";
+  if(bulkAddRowBtn) bulkAddRowBtn.disabled=!isStockOut;
+  if(bulkAddAllBtn) bulkAddAllBtn.disabled=!isStockOut;
+}
+
+function handleTransactionTypeChange(){
+  const hasItems=transactionOrderItems.length>0;
+  toggleTransactionCustomerFields();
+  renderBulkArticleRows();
+  if(hasItems){
+    clearTransactionOrder(false);
+    status("txStatus","Transaction type changed. Existing order items were cleared.");
+  }
+}
+
+function createBulkRowId(){
+  return `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+}
+
+function getSizeOptionsForProduct(productId){
+  const product=productsCache.find(p=>p.id===productId);
+  if(!product) return [];
+  const sizes=(typeof product.size_details==='object' && product.size_details)
+    ? product.size_details
+    : parseArticleDetails(product.article_details);
+  return Object.keys(sizes||{});
+}
+
+function renderBulkArticleRows(){
+  const txType=document.getElementById("txType")?.value;
+  const container=document.getElementById("bulkArticleRows");
+  if(!container) return;
+  if(txType!=="OUT"){
+    container.innerHTML="";
+    return;
+  }
+
+  if(!bulkArticleRows.length){
+    addBulkArticleRow(false);
+  }
+
+  container.innerHTML="";
+  bulkArticleRows.forEach((row)=>{
+    const productOptions=productsCache.map(product=>`<option value="${product.id}" ${product.id===row.product_id?"selected":""}>${product.name} — ${product.sku}</option>`).join("");
+    const sizeList=getSizeOptionsForProduct(row.product_id);
+    const selectedSize=sizeList.includes(row.size) ? row.size : (sizeList[0]||"");
+    if(selectedSize!==row.size) row.size=selectedSize;
+    const sizeOptions=sizeList.map(size=>`<option value="${size}" ${size===selectedSize?"selected":""}>${size}</option>`).join("");
+
+    const card=document.createElement("div");
+    card.className="bulk-article-row";
+    card.innerHTML=`
+      <div class="bulk-row-grid">
+        <div>
+          <label>Article</label>
+          <select onchange="updateBulkArticleProduct('${row.id}',this.value)">
+            ${productOptions || '<option value="">No products</option>'}
+          </select>
+        </div>
+        <div>
+          <label>Size</label>
+          <select onchange="updateBulkArticleSize('${row.id}',this.value)">
+            ${sizeOptions || '<option value="">No size</option>'}
+          </select>
+        </div>
+        <div>
+          <label>Price</label>
+          <input type="number" min="0" step="0.01" value="${Number(row.unit_price||0)}" oninput="updateBulkArticlePrice('${row.id}',this.value)">
+        </div>
+        <button type="button" class="bulk-remove-btn" onclick="removeBulkArticleRow('${row.id}')">Remove</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function addBulkArticleRow(shouldRender=true){
+  const firstProduct=productsCache[0];
+  const sizeList=getSizeOptionsForProduct(firstProduct?.id||"");
+  bulkArticleRows.push({
+    id:createBulkRowId(),
+    product_id:firstProduct?.id||"",
+    size:sizeList[0]||"",
+    unit_price:Number(document.getElementById("txPrice")?.value||0)
+  });
+  if(shouldRender) renderBulkArticleRows();
+}
+
+function removeBulkArticleRow(rowId){
+  bulkArticleRows=bulkArticleRows.filter(row=>row.id!==rowId);
+  renderBulkArticleRows();
+}
+
+function updateBulkArticleProduct(rowId,productId){
+  bulkArticleRows=bulkArticleRows.map(row=>{
+    if(row.id!==rowId) return row;
+    const sizes=getSizeOptionsForProduct(productId);
+    return {...row,product_id:productId,size:sizes[0]||""};
+  });
+  renderBulkArticleRows();
+}
+
+function updateBulkArticleSize(rowId,size){
+  bulkArticleRows=bulkArticleRows.map(row=>row.id===rowId?{...row,size}:row);
+}
+
+function updateBulkArticlePrice(rowId,value){
+  bulkArticleRows=bulkArticleRows.map(row=>row.id===rowId?{...row,unit_price:Number(value||0)}:row);
+}
+
+async function addAllBulkRowsToOrder(){
+  try{
+    const txType=document.getElementById("txType")?.value;
+    if(txType!=="OUT") throw new Error("Bulk add is available for Stock Out.");
+    if(!bulkArticleRows.length) throw new Error("Add at least one article row first.");
+    if(transactionOrderItems.length && transactionOrderItems[0].transaction_type!==txType){
+      throw new Error("All items in one order must use the same transaction type.");
+    }
+
+    const sharedNotes=document.getElementById("txNotes")?.value.trim()||"";
+    let added=0;
+    for(const row of bulkArticleRows){
+      if(!row.product_id || !row.size) throw new Error("Each article row needs product and size.");
+      const item=await buildTransactionItemFromValues(txType,row.product_id,row.size,1,Number(row.unit_price||0),sharedNotes);
+      transactionOrderItems.push(item);
+      added+=1;
+    }
+
+    renderTransactionOrder();
+    bulkArticleRows=[];
+    renderBulkArticleRows();
+    status("txStatus",`${added} article${added===1?"":"s"} added to current order.`);
+  }catch(e){status("txStatus",e.message,false)}
+}
+
+function renderTransactionOrder(){
+  const itemsBox=document.getElementById("orderCartItems");
+  const meta=document.getElementById("orderCartMeta");
+  if(!itemsBox || !meta) return;
+
+  if(!transactionOrderItems.length){
+    itemsBox.innerHTML="";
+    meta.textContent="No items added yet.";
+    return;
+  }
+
+  const totalQty=transactionOrderItems.reduce((sum,item)=>sum+Number(item.quantity||0),0);
+  meta.textContent=`${transactionOrderItems.length} item${transactionOrderItems.length===1?"":"s"} · Total units ${totalQty}`;
+  itemsBox.innerHTML="";
+
+  transactionOrderItems.forEach((item,index)=>{
+    const row=document.createElement("div");
+    row.className="order-cart-row";
+    const details=item.transaction_type==='OUT'
+      ? `Size ${item.size} · 1 article · Price ${Number(item.unit_price||0).toFixed(2)}`
+      : `Size ${item.size} · Qty ${item.quantity} · Price ${Number(item.unit_price||0).toFixed(2)}`;
+    row.innerHTML=`
+      <div>
+        <div class="order-cart-line">${item.name} (${item.sku})</div>
+        <div class="order-cart-sub">${details}</div>
+      </div>
+      <button type="button" onclick="removeTransactionItem(${index})">Remove</button>
+    `;
+    itemsBox.appendChild(row);
+  });
+}
+
+function removeTransactionItem(index){
+  transactionOrderItems=transactionOrderItems.filter((_,i)=>i!==index);
+  renderTransactionOrder();
+}
+
+function clearTransactionOrder(showMessage=false){
+  transactionOrderItems=[];
+  renderTransactionOrder();
+  if(showMessage) status("txStatus","Order cleared.");
+}
+
+async function buildCurrentTransactionItem(){
+  const txType=document.getElementById("txType").value;
+  const productId=document.getElementById("txProduct").value;
+  const size=document.getElementById("txSize").value;
+  const qty=txType==='OUT' ? 1 : Number(document.getElementById("txQty").value);
+  if(!productId||qty<=0||!size) throw new Error(txType==='OUT' ? "Select a product and size." : "Select a product, size, and enter quantity.");
+
+  return buildTransactionItemFromValues(
+    txType,
+    productId,
+    size,
+    qty,
+    Number(document.getElementById("txPrice").value||0),
+    document.getElementById("txNotes").value.trim()
+  );
+}
+
+async function buildTransactionItemFromValues(txType,productId,size,qty,unitPrice,notes){
+  const product=productsCache.find(p=>p.id===productId);
+  if(!product) throw new Error("Selected product not found.");
+
+  const {data:existingTxs,error:txError}=await sb.from("stock_transactions").select("size,transaction_type,quantity").eq("product_id",productId);
+  if(txError) throw txError;
+
+  const currentSizes=getSizeStock(product.size_details||product.article_details, existingTxs||[]);
+  const pendingDelta=transactionOrderItems
+    .filter(item=>item.product_id===productId && item.size===size)
+    .reduce((sum,item)=>sum + (item.transaction_type==='IN' ? Number(item.quantity||0) : -Number(item.quantity||0)),0);
+  const availableWithPending=(currentSizes[size]||0)+pendingDelta;
+
+  if(txType==='OUT' && qty>availableWithPending){
+    throw new Error(`Cannot stock out ${qty} ${size} items; only ${availableWithPending} available after queued items.`);
+  }
+
+  return {
+    product_id:productId,
+    name:product.name||"Item",
+    sku:product.sku||"",
+    size,
+    transaction_type:txType,
+    quantity:qty,
+    unit_price:Number(unitPrice||0),
+    notes:notes||""
+  };
+}
+
+async function addTransactionItem(){
+  try{
+    const row=await buildCurrentTransactionItem();
+    if(transactionOrderItems.length && transactionOrderItems[0].transaction_type!==row.transaction_type){
+      throw new Error("All items in one order must use the same transaction type.");
+    }
+    transactionOrderItems.push(row);
+    renderTransactionOrder();
+    if(row.transaction_type==='OUT'){
+      document.getElementById("txQty").value=1;
+    }else{
+      document.getElementById("txQty").value="";
+    }
+    document.getElementById("txNotes").value="";
+    status("txStatus","Item added to current order.");
+  }catch(e){status("txStatus",e.message,false)}
 }
 
 function prefillDeliveryFromTransaction(tx,product){
@@ -1648,6 +2129,7 @@ async function loadProducts(){
     const o=document.createElement("option");o.value=p.id;o.textContent=`${p.name} — ${p.sku}`;s.appendChild(o);
   });
   await updateSizeOptions();
+  renderBulkArticleRows();
 }
 
 const AVAILABLE_SIZES=["XS","S","M","L","XL","XXL","3XL","4XL"];
@@ -1994,50 +2476,57 @@ function renderInventoryProducts(){
 
 async function saveTransaction(){
   try{
-    const txType=document.getElementById("txType").value;
-    const productId=document.getElementById("txProduct").value;
-    const size=document.getElementById("txSize").value;
-    const qty=Number(document.getElementById("txQty").value);
-    if(!productId||qty<=0||!size) throw new Error("Select a product, size, and enter quantity.");
-    const product=productsCache.find(p=>p.id===productId);
-    if(!product) throw new Error("Selected product not found.");
-    const {data:existingTxs,error:txError}=await sb.from("stock_transactions").select("size,transaction_type,quantity").eq("product_id",productId);
-    if(txError) throw txError;
-    const currentSizes=getSizeStock(product.size_details||product.article_details, existingTxs);
-    if(txType==='OUT' && qty > (currentSizes[size]||0)){
-      throw new Error(`Cannot stock out ${qty} ${size} items; only ${(currentSizes[size]||0)} available.`);
+    if(!transactionOrderItems.length){
+      const autoItem=await buildCurrentTransactionItem();
+      transactionOrderItems.push(autoItem);
+      renderTransactionOrder();
     }
+
+    const txType=transactionOrderItems[0].transaction_type;
     const customerPhone=document.getElementById("txPhone")?.value.trim()||"";
     const customerEmail=document.getElementById("txEmail")?.value.trim()||"";
     const customerAddress=document.getElementById("txAddress")?.value.trim()||"";
     if(txType==='OUT' && (!customerPhone || !customerAddress)){
       throw new Error("For Stock Out, add customer phone and address for the delivery label.");
     }
-    const row={
-      product_id:productId,
-      size,
-      transaction_type:txType,
-      quantity:qty,
-      unit_price:Number(document.getElementById("txPrice").value||0),
+
+    const rows=transactionOrderItems.map(item=>({
+      product_id:item.product_id,
+      size:item.size,
+      transaction_type:item.transaction_type,
+      quantity:item.quantity,
+      unit_price:Number(item.unit_price||0),
       party:document.getElementById("txParty").value.trim(),
       reference:document.getElementById("txReference").value.trim(),
-      notes:document.getElementById("txNotes").value.trim(),
+      notes:item.notes||"",
       phone:customerPhone,
       email:customerEmail,
       address:customerAddress
-    };
-    const {error}=await sb.from("stock_transactions").insert(row);
+    }));
+
+    const {error}=await sb.from("stock_transactions").insert(rows);
     if(error) throw error;
-    status("txStatus",txType==='OUT' ? "Stock Out saved. Delivery label is ready to print." : "Transaction saved.");
+
+    status("txStatus",txType==='OUT' ? `Stock Out order saved (${rows.length} item${rows.length===1?"":"s"}). Delivery label is ready to print.` : `Stock In order saved (${rows.length} item${rows.length===1?"":"s"}).`);
     if(txType==='OUT'){
+      const productById=productsCache.reduce((acc,item)=>{acc[item.id]=item;return acc;},{});
+      const itemSummary=transactionOrderItems
+        .map(item=>`${item.quantity} x ${(productById[item.product_id]?.name)||item.name} (${item.size})`)
+        .join("; ");
       prefillDeliveryFromTransaction({
-        ...row,
+        quantity:1,
+        size:"Mixed",
+        party:document.getElementById("txParty").value.trim(),
+        reference:document.getElementById("txReference").value.trim(),
+        notes:transactionOrderItems.map(item=>item.notes).filter(Boolean).join(" | "),
         phone:customerPhone,
         email:customerEmail,
         address:customerAddress
-      },product);
+      },{name:itemSummary});
       showTab("delivery");
     }
+
+    clearTransactionOrder();
     document.getElementById("txQty").value="";
     document.getElementById("txNotes").value="";
     await Promise.all([loadDashboard(), loadInventory(), loadCustomers()]);
@@ -2399,6 +2888,9 @@ async function exportCSV(){
 renderSelectedSizeInputs();
 toggleTransactionCustomerFields();
 updateDeliveryLabel();
+detectRecoveryMode();
+renderTransactionOrder();
+renderBulkArticleRows();
 
 document.addEventListener("click",(event)=>{
   const menu=document.getElementById("quickMenu");
@@ -2415,7 +2907,32 @@ sb.auth.getSession().then(async({data})=>{
     await Promise.all([loadProducts(),loadDashboard()]);
   }
 });
-if("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js");
+if("serviceWorker" in navigator){
+  let swRefreshTriggered=false;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(swRefreshTriggered) return;
+    swRefreshTriggered=true;
+    location.reload();
+  });
+
+  navigator.serviceWorker.register("service-worker.js?v=11").then((registration)=>{
+    registration.update();
+
+    if(registration.waiting){
+      registration.waiting.postMessage({type:"SKIP_WAITING"});
+    }
+
+    registration.addEventListener("updatefound",()=>{
+      const worker=registration.installing;
+      if(!worker) return;
+      worker.addEventListener("statechange",()=>{
+        if(worker.state==="installed" && navigator.serviceWorker.controller){
+          worker.postMessage({type:"SKIP_WAITING"});
+        }
+      });
+    });
+  });
+}
 </script>
 </body>
 </html>
