@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#172033" />
+  <title>Sufi Thread Inventory</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  
+  <style>
+    :root{
+      --navy:#12203f;
+      --navy-soft:#203157;
+      --peach:#f7d9cb;
+      --peach-2:#fceee7;
+      --rose:#b85f47;
+      --rose-dark:#8f3f2c;
+      --gold:#c58b49;
+      --cream:#fffaf7;
+      --paper:#fffdfb;
+      --text:#2c2430;
+      --muted:#716875;
+      --green:#e6f4e3;
+      --red:#fde5e1;
+      --border:#ecd9cf;
+      --shadow:0 18px 45px rgba(107,67,49,.12);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 0 0,rgba(248,205,189,.55),transparent 28%),
+        radial-gradient(circle at 100% 5%,rgba(250,221,207,.75),transparent 24%),
+        linear-gradient(180deg,#f8e3d8 0,#fbf4ef 42%,#f4e1d8 100%);
+      font-family:Inter,Arial,sans-serif;
+    }
+
+    body::before,
+    body::after{
+      content:"✿";
+      position:fixed;
+      z-index:-1;
+      font-size:190px;
+      color:rgba(184,95,71,.08);
+      line-height:1;
+      pointer-events:none;
+    }
+    body::before{left:-48px;top:80px;transform:rotate(-18deg)}
+    body::after{right:-45px;bottom:40px;transform:rotate(20deg)}
+
+    header{
+      display:none;
+    }
+
+    .wrap{
+      max-width:1120px;
+      margin:20px auto;
+      padding:0 14px 105px;
+    }
+
+    .card{
+      background:rgba(255,253,251,.96);
+      border:1px solid rgba(236,217,207,.95);
+      border-radius:22px;
+      padding:22px;
+      margin-bottom:18px;
+      box-shadow:var(--shadow);
+    }
+
+    #authCard{
+      max-width:480px;
+      margin:70px auto;
+      position:relative;
+      overflow:hidden;
+    }
+
+    h2,h3{
+      font-family:"Cormorant Garamond",serif;
+      color:var(--navy);
+    }
+
+    h2{
+      margin:0 0 18px;
+      font-size:30px;
+    }
+
+    .brand-shell{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      background:rgba(255,253,251,.97);
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:16px 18px;
+      margin-bottom:16px;
+      box-shadow:var(--shadow);
+      position:relative;
+    }
+
+    .brand-left{
+      display:flex;
+      align-items:center;
+      gap:20px;
+      min-width:0;
+    }
+
+    .brand-logo{
+      width:120px;
+      height:120px;
+      flex:0 0 120px;
+      object-fit:contain;
+      background:#fff;
+      border-radius:18px;
+      padding:4px;
+    }
+
+    .brand-text{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+
+    .brand-text h1{
+      margin:0;
+      font-size:42px;
+      font-family:"Cormorant Garamond",serif;
+      letter-spacing:5px;
+      color:#2b1c18;
+      text-transform:uppercase;
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .brand-text p{
+      margin-top:6px;
+      font-family:"Great Vibes",cursive;
+      font-size:24px;
+      color:#b97a56;
+    }
+
+    .admin-block{
+      margin-left:auto;
+      text-align:right;
+      display:flex;
+      align-items:center;
+      gap:11px;
+    }
+
+    .top-actions{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      position:relative;
+    }
+
+    .quick-menu-btn{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      border:1px solid var(--border);
+      background:#fff7f2;
+      color:var(--navy);
+      font-size:24px;
+      line-height:1;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      padding:0;
+    }
+
+    .quick-menu-btn:hover{background:#fff1e8}
+
+    .quick-menu{
+      position:absolute;
+      right:0;
+      top:calc(100% + 8px);
+      min-width:210px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fffdfb;
+      box-shadow:0 12px 28px rgba(71,42,30,.18);
+      padding:6px;
+      z-index:60;
+    }
+
+    .quick-menu button{
+      width:100%;
+      border:0;
+      background:transparent;
+      text-align:left;
+      padding:11px 12px;
+      border-radius:9px;
+      font:inherit;
+      color:#3e3138;
+      cursor:pointer;
+    }
+
+    .quick-menu button:hover{
+      background:#fcece2;
+      color:var(--rose-dark);
+    }
+
+    .admin-avatar{
+      width:54px;
+      height:54px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:var(--navy);
+      color:#f4ca85;
+      border:2px solid #d59d52;
+      font-family:"Cormorant Garamond",serif;
+      font-size:25px;
+    }
+
+    .admin-name{font-weight:700;color:var(--navy)}
+    .admin-role{font-size:13px;color:var(--muted);margin-top:3px}
+
+    .tabs{display:none}
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.1fr 1fr;
+      min-height:305px;
+      overflow:hidden;
+      border-radius:22px;
+      background:
+        linear-gradient(110deg,rgba(255,246,240,.95),rgba(251,221,208,.72)),
+        radial-gradient(circle at 20% 30%,rgba(218,130,95,.22),transparent 30%);
+      border:1px solid var(--border);
+      margin-bottom:18px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero-art{
+      padding:34px;
+      display:flex;
+      align-items:flex-end;
+      position:relative;
+      min-height:300px;
+    }
+
+    .hero-art::before{
+      content:"✿  ❀  ✧";
+      position:absolute;
+      top:30px;
+      left:35px;
+      font-size:42px;
+      letter-spacing:22px;
+      color:#d27b5e;
+      opacity:.55;
+    }
+
+    .hero-dress{
+      font-family:"Great Vibes",cursive;
+      font-size:clamp(48px,7vw,82px);
+      color:rgba(168,78,52,.82);
+      line-height:.9;
+      max-width:420px;
+    }
+
+    .hero-copy{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      padding:30px;
+    }
+
+    .welcome{
+      font-family:"Cormorant Garamond",serif;
+      color:var(--rose-dark);
+      font-size:30px;
+    }
+
+    .administrator{
+      font-family:"Great Vibes",cursive;
+      color:var(--navy);
+      font-size:55px;
+      line-height:1.1;
+    }
+
+    .hero-divider{
+      width:170px;
+      height:1px;
+      background:#d79d85;
+      margin:12px 0;
+      position:relative;
+    }
+
+    .hero-divider::after{
+      content:"♡";
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-54%);
+      background:#f9e3d8;
+      padding:0 10px;
+      color:var(--rose);
+      font-size:24px;
+    }
+
+    .hero-copy p{
+      max-width:330px;
+      font-family:"Cormorant Garamond",serif;
+      font-size:22px;
+      margin:12px 0 0;
+      color:#413846;
+    }
+
+    .hidden{display:none!important}
+
+    label{
+      display:block;
+      font-weight:600;
+      margin-top:14px;
+      color:#4b3e45;
+      font-size:14px;
+    }
+
+    input,select,textarea{
+      width:100%;
+      padding:13px 14px;
+      margin-top:7px;
+      border:1px solid var(--border);
+      border-radius:11px;
+      font:inherit;
+      background:#fff;
+      color:var(--text);
+      outline:none;
+      transition:.2s ease;
+    }
+
+    input:focus,select:focus,textarea:focus{
+      border-color:#d98f72;
+      box-shadow:0 0 0 4px rgba(217,143,114,.13);
+    }
+
+    textarea{min-height:92px;resize:vertical}
+
+    button.primary,button.secondary{
+      width:100%;
+      padding:14px 16px;
+      margin-top:16px;
+      border:0;
+      border-radius:11px;
+      font-size:15px;
+      font-weight:700;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    button.primary:hover,button.secondary:hover{transform:translateY(-1px)}
+
+    button.primary{
+      background:linear-gradient(135deg,var(--rose-dark),#a65037);
+      color:#fff;
+      box-shadow:0 9px 20px rgba(143,63,44,.18);
+    }
+
+    button.secondary{
+      background:var(--navy);
+      color:#fff;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .status{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:10px;
+      display:none;
+      font-weight:700;
+    }
+    .ok{display:block;background:var(--green);color:#27632c}
+    .bad{display:block;background:var(--red);color:#9a2018}
+
+    .muted{color:var(--muted);font-size:13px;line-height:1.5}
+
+    .kpis{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin:0 0 18px;
+    }
+
+    .kpi{
+      background:linear-gradient(180deg,#fffdfb,#fff8f4);
+      border:1px solid var(--border);
+      padding:21px 14px;
+      border-radius:18px;
+      text-align:center;
+      min-height:150px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      color:#4f4650;
+      text-transform:uppercase;
+      letter-spacing:.8px;
+      font-size:12px;
+      font-weight:700;
+      box-shadow:0 10px 25px rgba(92,53,38,.07);
+    }
+
+    .kpi::before{
+      content:"◇";
+      width:44px;
+      height:44px;
+      display:grid;
+      place-items:center;
+      margin:0 auto 11px;
+      border-radius:50%;
+      background:#fbe4d9;
+      color:var(--rose-dark);
+      font-size:24px;
+    }
+
+    .kpi strong{
+      display:block;
+      font-family:"Cormorant Garamond",serif;
+      font-size:37px;
+      color:var(--navy);
+      margin-top:7px;
+      letter-spacing:0;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:15px;
+    }
+
+    .section-title::before{
+      content:"✦";
+      color:var(--gold);
+      font-size:18px;
+    }
+
+    .section-title h2{margin:0}
+
+    .size-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .size-card{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:11px;
+      background:#fffaf7;
+      transition:.2s ease;
+    }
+
+    .size-card:not(.disabled){
+      border-color:#d99475;
+      background:#fce8dd;
+    }
+
+    .size-card label{
+      margin:0;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+    }
+
+    .size-card input[type="checkbox"]{
+      width:17px;height:17px;margin:0;accent-color:var(--rose-dark);
+    }
+
+    .size-card input[type="number"]{margin-top:8px;padding:9px}
+    .size-card.disabled input[type="number"]{opacity:.48;background:#f6f1ee}
+
+    .product{
+      display:grid;
+      grid-template-columns:84px 1fr;
+      gap:15px;
+      align-items:center;
+      padding:14px;
+      margin-top:11px;
+      border:1px solid var(--border);
+      border-radius:15px;
+      background:#fffdfb;
+    }
+
+    .inventory-layout{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:260px 1fr;
+      gap:14px;
+      align-items:start;
+    }
+
+    .type-panel,
+    .type-items-panel{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#fffaf7;
+      padding:12px;
+    }
+
+    .type-panel h3,
+    .type-items-panel h3{
+      margin:0 0 10px;
+      font-size:21px;
+    }
+
+    .type-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:520px;
+      overflow:auto;
+    }
+
+    .type-item{
+      width:100%;
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:10px;
+      padding:10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      cursor:pointer;
+      color:#3b3037;
+      font:inherit;
+      text-align:left;
+    }
+
+    .type-item.active{
+      border-color:#d99475;
+      background:#fde9de;
+      color:var(--rose-dark);
+    }
+
+    .type-count{
+      min-width:28px;
+      height:28px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      display:grid;
+      place-items:center;
+      font-size:12px;
+      font-weight:700;
+      background:#fff8f3;
+      color:#5b4a53;
+    }
+
+    .type-items-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:8px;
+    }
+
+    .manage-layout{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:300px 1fr;
+      gap:14px;
+      align-items:start;
+    }
+
+    .customer-layout{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:300px 1fr;
+      gap:14px;
+      align-items:start;
+    }
+
+    .manage-list,
+    .manage-form{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#fffaf7;
+      padding:12px;
+    }
+
+    .manage-list-items{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:620px;
+      overflow:auto;
+    }
+
+    .customer-list-items{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:620px;
+      overflow:auto;
+    }
+
+    .manage-card{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:12px;
+      padding:10px;
+    }
+
+    .manage-card-top{
+      display:grid;
+      grid-template-columns:60px 1fr;
+      gap:10px;
+      align-items:start;
+    }
+
+    .manage-thumb{
+      width:60px;
+      height:60px;
+      object-fit:cover;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#f1e8e3;
+    }
+
+    .manage-card strong{
+      display:block;
+      color:var(--navy);
+      margin-bottom:4px;
+    }
+
+    .manage-card .muted{margin-top:2px}
+
+    .manage-card-actions{
+      display:flex;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .customer-card{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:12px;
+      padding:10px;
+      cursor:pointer;
+      text-align:left;
+      font:inherit;
+    }
+
+    .customer-card.active{
+      border-color:#d99475;
+      background:#fde9de;
+    }
+
+    .customer-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .customer-detail-top{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .customer-detail-box{
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      padding:12px;
+    }
+
+    .customer-detail-box strong{
+      display:block;
+      margin-bottom:6px;
+      color:var(--rose-dark);
+    }
+
+    .customer-manage-box{
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      padding:12px;
+      margin-top:12px;
+    }
+
+    .customer-manage-actions{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+
+    .customer-manage-actions button{
+      width:auto;
+      margin-top:0;
+      flex:1;
+    }
+
+    .customer-manage-actions .danger{
+      background:linear-gradient(135deg,#8f3f2c,#6f271b);
+      color:#fff;
+    }
+
+    .customer-manage-note{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+
+    .customer-items{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .customer-item-card{
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      padding:10px;
+      display:grid;
+      grid-template-columns:72px 1fr;
+      gap:10px;
+      align-items:start;
+    }
+
+    .customer-item-card img{
+      width:72px;
+      height:72px;
+      object-fit:cover;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#f1e8e3;
+    }
+
+    .customer-item-visual{
+      position:relative;
+      width:72px;
+      height:72px;
+      flex:0 0 72px;
+    }
+
+    .customer-item-placeholder{
+      width:72px;
+      height:72px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:linear-gradient(135deg,#f9e5da,#f2d0c0);
+      color:var(--rose-dark);
+      display:grid;
+      place-items:center;
+      text-align:center;
+      font-family:"Cormorant Garamond",serif;
+      font-size:22px;
+      font-weight:700;
+      line-height:1;
+      padding:6px;
+    }
+
+    .customer-article-label{
+      font-weight:700;
+      color:var(--navy);
+    }
+
+    .customer-article-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-top:4px;
+    }
+
+    .customer-article-badge{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:999px;
+      background:#f7ece6;
+      color:#5f5057;
+      font-size:12px;
+      border:1px solid var(--border);
+    }
+
+    .customer-item-link{
+      margin-top:6px;
+      background:transparent;
+      border:0;
+      padding:0;
+      color:var(--rose-dark);
+      font:inherit;
+      font-weight:700;
+      cursor:pointer;
+      text-decoration:underline;
+      width:auto;
+    }
+
+    .customer-meta{display:grid;gap:4px}
+
+    .manage-card-actions button,
+    .form-actions button{
+      width:auto;
+      margin-top:0;
+      flex:1;
+    }
+
+    .form-actions{
+      display:flex;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .form-actions .secondary{background:#7b5a46}
+
+    .manage-form .grid{margin-top:0}
+
+    .product img{
+      width:84px;height:84px;object-fit:cover;border-radius:12px;
+      background:#f1e8e3;border:1px solid var(--border);
+    }
+
+    .gallery-strip{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin:10px 0 2px;
+    }
+
+    .gallery-strip img{
+      width:52px;
+      height:52px;
+      object-fit:cover;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#f1e8e3;
+    }
+
+    #customerDeliveryFields{
+      margin-top:12px;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff8f4;
+    }
+
+    .delivery-hint{
+      margin-top:8px;
+      color:#6f5f67;
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:0;
+      width:min(100%,1120px);
+      z-index:40;
+      background:linear-gradient(180deg,#172647,#0f1c37);
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      border-radius:20px 20px 0 0;
+      padding:9px 12px max(9px,env(safe-area-inset-bottom));
+      box-shadow:0 -10px 30px rgba(20,27,48,.22);
+    }
+
+    .bottom-nav button{
+      border:0;
+      background:transparent;
+      color:#f4d59b;
+      padding:7px 4px;
+      cursor:pointer;
+      font-family:"Cormorant Garamond",serif;
+      font-size:17px;
+    }
+
+    .bottom-nav button span{
+      display:block;
+      font-family:Inter,sans-serif;
+      font-size:23px;
+      margin-bottom:3px;
+    }
+
+    .bottom-nav button.active{
+      color:#fff;
+      background:rgba(255,255,255,.08);
+      border-radius:12px;
+    }
+
+    .delivery-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+      align-items:start;
+    }
+
+    .delivery-preview-shell{
+      border:1px dashed #caa287;
+      border-radius:14px;
+      padding:10px;
+      background:#fff9f5;
+    }
+
+    .delivery-label{
+      background:#fff;
+      border:1px solid #d2b39f;
+      border-radius:12px;
+      padding:16px;
+      color:#2f242b;
+    }
+
+    .delivery-label h3{
+      margin:0;
+      font-size:24px;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:var(--navy);
+    }
+
+    .delivery-meta{
+      margin-top:6px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      font-size:13px;
+      color:#5c5059;
+    }
+
+    .delivery-block{
+      margin-top:12px;
+      border:1px solid #ead7cc;
+      border-radius:10px;
+      padding:10px;
+      background:#fffdfb;
+    }
+
+    .delivery-block strong{
+      display:block;
+      color:var(--rose-dark);
+      font-size:12px;
+      letter-spacing:.9px;
+      text-transform:uppercase;
+      margin-bottom:5px;
+    }
+
+    .delivery-address{
+      white-space:pre-line;
+      line-height:1.4;
+      min-height:52px;
+    }
+
+    .delivery-foot{
+      margin-top:10px;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      font-size:13px;
+      color:#5f5260;
+      border-top:1px dashed #e5d2c6;
+      padding-top:8px;
+    }
+
+    @media print{
+      body *{visibility:hidden!important}
+      #deliveryLabelPreview, #deliveryLabelPreview *{visibility:visible!important}
+      #deliveryLabelPreview{
+        position:absolute;
+        left:0;
+        top:0;
+        width:100%;
+        padding:0;
+        margin:0;
+      }
+      .delivery-preview-shell{
+        border:0;
+        padding:0;
+        background:#fff;
+      }
+      .delivery-label{
+        border:1px solid #000;
+      }
+    }
+
+    @media(max-width:850px){
+      .admin-block .admin-copy{display:none}
+      .kpis{grid-template-columns:repeat(2,1fr)}
+      .hero{grid-template-columns:1fr}
+      .hero-art{min-height:210px}
+      .hero-copy{padding-top:5px;padding-bottom:28px}
+      .delivery-grid{grid-template-columns:1fr}
+      .inventory-layout{grid-template-columns:1fr}
+      .manage-layout{grid-template-columns:1fr}
+      .customer-layout{grid-template-columns:1fr}
+      .customer-detail-top{grid-template-columns:1fr}
+    }
+
+    @media(max-width:620px){
+      .wrap{margin-top:10px;padding-left:9px;padding-right:9px}
+      .brand-shell{padding:12px}
+      .brand-logo{width:80px;height:80px;flex-basis:80px}
+      .brand-text h1{font-size:24px;letter-spacing:3px}
+      .brand-text p{font-size:18px}
+      .admin-block{display:none}
+      .hero-art{padding:25px}
+      .hero-dress{font-size:51px}
+      .administrator{font-size:44px}
+      .grid{grid-template-columns:1fr}
+      .size-grid{grid-template-columns:repeat(2,1fr)}
+      .card{padding:16px;border-radius:17px}
+      .bottom-nav button{font-size:14px}
+      .bottom-nav button span{font-size:20px}
+    }
+
+    @media(max-width:390px){
+      .brand-text h1{font-size:18px;letter-spacing:2px}
+      .brand-text p{font-size:16px}
+      .kpis{grid-template-columns:1fr 1fr}
+      .kpi{min-height:125px;padding:13px 8px}
+    }
+  </style>
+
+
+</head>
+<body>
+<header>
+  <h1>Sufi Thread Inventory</h1>
+  <div>Administrator: kj@sufithread.com</div>
+</header>
+
+<div class="wrap">
+  <div id="authCard" class="card">
+    <img src="sufi-thread-logo.png" alt="Sufi Thread logo" style="display:block;width:150px;height:150px;object-fit:contain;margin:0 auto 12px;border-radius:18px;">
+    <h2>Administrator Login</h2>
+    <label>Email</label>
+    <input id="email" type="email" value="kj@sufithread.com">
+    <label>Password</label>
+    <input id="password" type="password" placeholder="Create or enter your password">
+    <button class="primary" onclick="signIn()">Sign In</button>
+    <button class="secondary" onclick="signUp()">Create Admin Account</button>
+    <div id="authStatus" class="status"></div>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="brand-shell">
+      <div class="brand-left">
+        <img src="sufi-thread-logo.png" alt="Sufi Thread Logo" class="brand-logo">
+
+        <div class="brand-text">
+          <h1>SUFI THREAD</h1>
+          <p>Created by KJ</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <div class="admin-block">
+          <div class="admin-avatar">KJ</div>
+          <div class="admin-copy">
+            <div class="admin-name">kj@sufithread.com</div>
+            <div class="admin-role">Administrator</div>
+          </div>
+        </div>
+        <button id="quickMenuBtn" class="quick-menu-btn" onclick="toggleQuickMenu(event)" aria-label="Open quick menu">⋮</button>
+        <div id="quickMenu" class="quick-menu hidden">
+          <button onclick="handleQuickMenuAction('article-types')">Article Types</button>
+          <button onclick="handleQuickMenuAction('manage-articles')">Manage Articles</button>
+          <button onclick="handleQuickMenuAction('manage-customers')">Manage Customers</button>
+          <button onclick="handleQuickMenuAction('customers')">Customers</button>
+          <button onclick="handleQuickMenuAction('print-label')">Print Delivery Label</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('dashboard',this)">Dashboard</button>
+      <button class="tab" onclick="showTab('transaction',this)">Stock In/Out</button>
+      <button class="tab" onclick="showTab('product',this)">Add Product</button>
+      <button class="tab" onclick="showTab('inventory',this)">Inventory</button>
+    </div>
+
+    <section id="dashboard">
+      <div class="hero">
+        <div class="hero-art">
+          <div class="hero-dress">Grace in every thread</div>
+        </div>
+        <div class="hero-copy">
+          <div class="welcome">Welcome back,</div>
+          <div class="administrator">Administrator</div>
+          <div class="hero-divider"></div>
+          <p>Manage your inventory with elegance and ease.</p>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">Total Products<strong id="kpiProducts">0</strong></div>
+        <div class="kpi">Total Units<strong id="kpiUnits">0</strong></div>
+        <div class="kpi">Low Stock Items<strong id="kpiLow">0</strong></div>
+        <div class="kpi">Today's Activity<strong id="kpiToday">0</strong></div>
+      </div>
+    </section>
+
+    <section id="transaction" class="card hidden">
+      <div class="section-title"><h2>Stock In / Stock Out</h2></div>
+      <label>Transaction Type</label>
+      <select id="txType" onchange="toggleTransactionCustomerFields()"><option value="IN">Stock In</option><option value="OUT">Stock Out</option></select>
+      <label>Product</label>
+      <select id="txProduct" onchange="updateSizeOptions()"></select>
+      <label>Size</label>
+      <select id="txSize"></select>
+      <div class="grid">
+        <div><label>Quantity</label><input id="txQty" type="number" min="1"></div>
+        <div><label>Price / Unit Cost</label><input id="txPrice" type="number" min="0" step="0.01"></div>
+      </div>
+      <label>Supplier / Customer Name</label><input id="txParty">
+      <label>Reference</label><input id="txReference">
+
+      <div id="customerDeliveryFields" class="hidden">
+        <label>Customer Phone</label><input id="txPhone" placeholder="+92...">
+        <label>Customer Email</label><input id="txEmail" type="email" placeholder="customer@email.com">
+        <label>Customer Address</label><textarea id="txAddress" placeholder="House, street, area, city, postal code"></textarea>
+        <div class="delivery-hint">After saving Stock Out, these details will be copied into Delivery Label so you can print immediately.</div>
+      </div>
+
+      <label>Notes</label><textarea id="txNotes"></textarea>
+      <button class="primary" onclick="saveTransaction()">Save Transaction</button>
+      <div id="txStatus" class="status"></div>
+    </section>
+
+    <section id="product" class="card hidden">
+      <div class="section-title"><h2>Add New Product</h2></div>
+      <div class="grid">
+        <div>
+          <label>SKU / Article Code</label><input id="sku" placeholder="ST-KURTI-001">
+          <label>Product Name</label><input id="productName">
+          <label>Article Type</label>
+          <select id="category">
+            <option value="Kurti">Kurti</option>
+            <option value="Pajama">Pajama</option>
+            <option value="Co-ord Set">Co-ord Set</option>
+            <option value="Shirt">Shirt</option>
+            <option value="Trouser">Trouser</option>
+            <option value="Dupatta">Dupatta</option>
+            <option value="Other">Other</option>
+          </select>
+          <label>Colour</label><input id="colour">
+          <label>Product Image</label>
+          <input id="productImage" type="file" accept="image/*">
+          <div class="muted">Choose a product photo from your device.</div>
+          <label>Gallery Images</label>
+          <input id="galleryImages" type="file" accept="image/*" multiple>
+          <div class="muted">Choose one or more additional gallery images for the product.</div>
+        </div>
+        <div>
+          <label>Select Sizes & Quantity</label>
+          <div id="sizeRows" class="size-grid"></div>
+          <div class="muted">Choose multiple sizes and enter opening quantity for each size.</div>
+          <div class="grid">
+            <div><label>Cost Price</label><input id="costPrice" type="number" min="0" step="0.01"></div>
+            <div><label>Selling Price</label><input id="sellingPrice" type="number" min="0" step="0.01"></div>
+          </div>
+          <label>Reorder Level</label><input id="reorderLevel" type="number" min="0" value="5">
+        </div>
+      </div>
+      <button class="primary" onclick="saveProduct()">Save Product</button>
+      <div id="productStatus" class="status"></div>
+    </section>
+
+    <section id="inventory" class="card hidden">
+      <div class="section-title"><h2>Live Inventory</h2></div>
+      <button class="secondary" onclick="loadInventory()">Refresh Inventory</button>
+      <div class="inventory-layout">
+        <div class="type-panel">
+          <h3>Article Types</h3>
+          <div id="articleTypeList" class="type-list"></div>
+        </div>
+        <div class="type-items-panel">
+          <div class="type-items-header">
+            <h3 id="selectedTypeTitle">All Products</h3>
+            <div id="selectedTypeMeta" class="muted"></div>
+          </div>
+          <div id="inventoryList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="manageArticles" class="card hidden">
+      <div class="section-title"><h2>Manage Articles</h2></div>
+      <div class="muted">Select an article to edit its details or remove it completely.</div>
+      <div class="manage-layout">
+        <div class="manage-list">
+          <h3>Articles</h3>
+          <div id="manageArticleList" class="manage-list-items"></div>
+        </div>
+        <div class="manage-form">
+          <h3 id="manageFormTitle">Select an article to edit</h3>
+          <div class="grid">
+            <div>
+              <label>SKU / Article Code</label><input id="editSku" placeholder="ST-KURTI-001">
+              <label>Product Name</label><input id="editProductName">
+              <label>Article Type</label>
+              <select id="editCategory">
+                <option value="Kurti">Kurti</option>
+                <option value="Pajama">Pajama</option>
+                <option value="Co-ord Set">Co-ord Set</option>
+                <option value="Shirt">Shirt</option>
+                <option value="Trouser">Trouser</option>
+                <option value="Dupatta">Dupatta</option>
+                <option value="Other">Other</option>
+              </select>
+              <label>Colour</label><input id="editColour">
+              <label>Product Image</label><input id="editProductImage" type="file" accept="image/*">
+              <div class="muted">Leave blank to keep the current image.</div>
+              <label>Gallery Images</label><input id="editGalleryImages" type="file" accept="image/*" multiple>
+              <div class="muted">Upload new images to replace the current gallery.</div>
+            </div>
+            <div>
+              <label>Select Sizes & Quantity</label>
+              <div id="editSizeRows" class="size-grid"></div>
+              <div class="muted">Updating sizes changes the article stock setup for this product.</div>
+              <div class="grid">
+                <div><label>Cost Price</label><input id="editCostPrice" type="number" min="0" step="0.01"></div>
+                <div><label>Selling Price</label><input id="editSellingPrice" type="number" min="0" step="0.01"></div>
+              </div>
+              <label>Reorder Level</label><input id="editReorderLevel" type="number" min="0" value="5">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="secondary" onclick="clearManageForm()">Clear</button>
+            <button class="primary" onclick="updateManagedArticle()">Update Article</button>
+            <button class="secondary" onclick="deleteManagedArticle()">Delete Article</button>
+          </div>
+          <div id="manageStatus" class="status"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="customers" class="card hidden">
+      <div class="section-title"><h2>Customers</h2></div>
+      <div class="muted">Customer details are saved automatically from stock out transactions.</div>
+      <div class="customer-layout">
+        <div class="manage-list">
+          <h3>Customer List</h3>
+          <input id="customerSearch" type="search" placeholder="Search by name, phone, or article" oninput="renderCustomers()">
+          <div id="customerList" class="customer-list-items"></div>
+        </div>
+        <div class="manage-form">
+          <h3 id="customerDetailTitle">Select a customer</h3>
+          <div id="customerDetailEmpty" class="muted">Pick a customer name to view their phone, address, and bought articles.</div>
+          <div id="customerDetailContent" class="hidden">
+            <div class="customer-detail-top">
+              <div class="customer-detail-box">
+                <strong>Customer Info</strong>
+                <div id="customerDetailName"></div>
+                <div id="customerDetailPhone" class="muted"></div>
+                <div id="customerDetailEmail" class="muted"></div>
+                <div id="customerDetailAddress" class="muted"></div>
+              </div>
+              <div class="customer-detail-box">
+                <strong>Summary</strong>
+                <div id="customerDetailCount" class="muted"></div>
+                <div id="customerDetailOrders" class="muted"></div>
+                <div id="customerDetailLast" class="muted"></div>
+              </div>
+            </div>
+            <div id="customerManageBox" class="customer-manage-box hidden">
+              <h3 style="margin-top:0">Manage Customer</h3>
+              <div class="grid">
+                <div><label>Customer Name</label><input id="customerEditName"></div>
+                <div><label>Phone</label><input id="customerEditPhone"></div>
+              </div>
+              <div class="grid">
+                <div><label>Email</label><input id="customerEditEmail" type="email"></div>
+                <div><label>Address</label><textarea id="customerEditAddress" placeholder="House, street, area"></textarea></div>
+              </div>
+              <div class="customer-manage-actions">
+                <button class="secondary" onclick="fillCustomerEditForm()">Load Selected Customer</button>
+                <button class="primary" onclick="saveManagedCustomer()">Save Changes</button>
+                <button class="danger" onclick="deleteManagedCustomer()">Delete Customer</button>
+              </div>
+              <div class="customer-manage-note">Editing or deleting a customer updates the stock-out records behind that customer card.</div>
+              <div id="customerManageStatus" class="status"></div>
+            </div>
+            <div class="section-title"><h2 style="font-size:26px;margin:0">Bought Articles</h2></div>
+            <div id="customerItems" class="customer-items"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="delivery" class="card hidden">
+      <div class="section-title"><h2>Delivery Label</h2></div>
+      <div class="delivery-grid">
+        <div>
+          <div class="grid">
+            <div><label>Order Number</label><input id="dlOrderNo" placeholder="ORD-1001" oninput="updateDeliveryLabel()"></div>
+            <div><label>Delivery Date</label><input id="dlDate" type="date" oninput="updateDeliveryLabel()"></div>
+          </div>
+          <label>Recipient Name</label><input id="dlName" placeholder="Customer full name" oninput="updateDeliveryLabel()">
+          <label>Phone</label><input id="dlPhone" placeholder="+92..." oninput="updateDeliveryLabel()">
+          <label>Email</label><input id="dlEmail" type="email" placeholder="customer@email.com" oninput="updateDeliveryLabel()">
+          <label>Address</label><textarea id="dlAddress" placeholder="House, street, area" oninput="updateDeliveryLabel()"></textarea>
+          <div class="grid">
+            <div><label>City</label><input id="dlCity" placeholder="Karachi" oninput="updateDeliveryLabel()"></div>
+            <div><label>Postal Code</label><input id="dlPostal" placeholder="74000" oninput="updateDeliveryLabel()"></div>
+          </div>
+          <div class="grid">
+            <div><label>Item Summary</label><input id="dlItems" placeholder="2 x Kurti, 1 x Hijab" oninput="updateDeliveryLabel()"></div>
+            <div><label>Delivery Type</label><select id="dlType" oninput="updateDeliveryLabel()"><option>Standard</option><option>Express</option><option>Same Day</option></select></div>
+          </div>
+          <label>Notes</label><input id="dlNotes" placeholder="Fragile / Leave at reception" oninput="updateDeliveryLabel()">
+          <div class="grid">
+            <div><button class="secondary" onclick="clearDeliveryForm()">Clear Form</button></div>
+            <div><button class="primary" onclick="printDeliveryLabel()">Print Label</button></div>
+          </div>
+        </div>
+
+        <div id="deliveryLabelPreview" class="delivery-preview-shell">
+          <div class="delivery-label">
+            <h3>Sufi Thread Delivery</h3>
+            <div class="delivery-meta">
+              <div><strong>Order:</strong> <span id="pvOrderNo">-</span></div>
+              <div><strong>Date:</strong> <span id="pvDate">-</span></div>
+              <div><strong>Type:</strong> <span id="pvType">Standard</span></div>
+              <div><strong>Phone:</strong> <span id="pvPhone">-</span></div>
+              <div><strong>Email:</strong> <span id="pvEmail">-</span></div>
+            </div>
+            <div class="delivery-block">
+              <strong>Ship To</strong>
+              <div id="pvName">Recipient Name</div>
+              <div id="pvAddress" class="delivery-address">Address line, city, postal code</div>
+            </div>
+            <div class="delivery-block">
+              <strong>Package</strong>
+              <div id="pvItems">No items added yet.</div>
+            </div>
+            <div class="delivery-foot">
+              <div><strong style="display:inline;color:#5f5260;font-size:13px;text-transform:none">Notes:</strong> <span id="pvNotes">-</span></div>
+              <div><strong style="display:inline;color:#5f5260;font-size:13px;text-transform:none">From:</strong> Sufi Thread<br>+1 604 657 5454<br>kj@sufithread.com</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="bottom-nav">
+      <button class="bottom-item active" data-tab="dashboard" onclick="navigateTo('dashboard',this)"><span>⌂</span>Dashboard</button>
+      <button class="bottom-item" data-tab="transaction" onclick="navigateTo('transaction',this)"><span>⇅</span>Stock In/Out</button>
+      <button class="bottom-item" data-tab="product" onclick="navigateTo('product',this)"><span>◇</span>Add Product</button>
+      <button class="bottom-item" data-tab="inventory" onclick="navigateTo('inventory',this)"><span>▤</span>Inventory</button>
+    </nav>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://wfoputgrjortobtpczce.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmb3B1dGdyam9ydG9idHBjemNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NzI4MDIsImV4cCI6MjA5OTU0ODgwMn0.ITHlM1cLHPdHX25lmxsA_jfebUu0G3Q56VKyhg3u6BQ";
+const ADMIN_EMAIL = "kj@sufithread.com";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let productsCache=[];
+let inventoryProductsCache=[];
+let selectedArticleType="ALL";
+let editingArticleId=null;
+let customerEntriesCache=[];
+let selectedCustomerKey="";
+let customerSearchTerm="";
+let editingCustomerKey="";
+let customerManageMode=false;
+
+function status(id,msg,ok=true){
+  const el=document.getElementById(id);
+  el.className="status "+(ok?"ok":"bad");
+  el.textContent=msg;
+}
+
+async function signUp(){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  if(email!==ADMIN_EMAIL) return status("authStatus","Use the approved admin email.",false);
+  const {error}=await sb.auth.signUp({email,password});
+  if(error) return status("authStatus",error.message,false);
+  status("authStatus","Account created. Check your email if confirmation is enabled.");
+}
+
+async function signIn(){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  if(error) return status("authStatus",error.message,false);
+  document.getElementById("authCard").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  await Promise.all([loadProducts(),loadDashboard(),loadCustomers()]);
+}
+
+async function signOut(){await sb.auth.signOut();location.reload()}
+
+async function showTab(id,btn){
+  ["dashboard","transaction","product","inventory","manageArticles","customers","delivery"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+
+  document.querySelectorAll(".tab,.bottom-item").forEach(x=>{
+    x.classList.toggle("active",x.dataset.tab===id);
+  });
+
+  if(btn && btn.classList.contains("tab")) btn.classList.add("active");
+  if(id==="inventory") await loadInventory();
+  if(id==="manageArticles"){
+    await loadInventory();
+    renderManageArticles();
+  }
+  if(id==="customers"){
+    await loadCustomers();
+    renderCustomers();
+  }
+  if(id==="dashboard") await loadDashboard();
+  if(id==="delivery") updateDeliveryLabel();
+  closeQuickMenu();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function navigateTo(id,btn){
+  showTab(id,btn);
+}
+
+function toggleQuickMenu(event){
+  if(event) event.stopPropagation();
+  const menu=document.getElementById("quickMenu");
+  if(!menu) return;
+  menu.classList.toggle("hidden");
+}
+
+function closeQuickMenu(){
+  const menu=document.getElementById("quickMenu");
+  if(menu) menu.classList.add("hidden");
+}
+
+async function handleQuickMenuAction(action){
+  if(action==="article-types"){
+    selectedArticleType="ALL";
+    await showTab("inventory");
+    renderArticleTypeList();
+    renderInventoryProducts();
+  }
+  if(action==="manage-articles"){
+    editingArticleId=null;
+    clearManageForm();
+    await showTab("manageArticles");
+    renderManageArticles();
+  }
+  if(action==="manage-customers"){
+    editingCustomerKey="";
+    customerSearchTerm="";
+    selectedCustomerKey="";
+    customerManageMode=true;
+    await showTab("customers");
+    const search=document.getElementById("customerSearch");
+    if(search) search.value="";
+    renderCustomers();
+    fillCustomerEditForm();
+  }
+  if(action==="customers"){
+    selectedCustomerKey="";
+    customerSearchTerm="";
+    customerManageMode=false;
+    await showTab("customers");
+    const search=document.getElementById("customerSearch");
+    if(search) search.value="";
+    renderCustomers();
+  }
+  if(action==="delivery"){
+    await showTab("delivery");
+  }
+  if(action==="print-label"){
+    await showTab("delivery");
+    setTimeout(()=>printDeliveryLabel(),80);
+  }
+  closeQuickMenu();
+}
+
+function toggleTransactionCustomerFields(){
+  const isStockOut=document.getElementById("txType")?.value==="OUT";
+  const box=document.getElementById("customerDeliveryFields");
+  if(box) box.classList.toggle("hidden",!isStockOut);
+}
+
+function prefillDeliveryFromTransaction(tx,product){
+  const today=new Date();
+  const isoDate=today.toISOString().slice(0,10);
+  const itemSummary=`${tx.quantity} x ${product.name} (${tx.size})`;
+
+  const orderInput=document.getElementById("dlOrderNo");
+  const dateInput=document.getElementById("dlDate");
+  const nameInput=document.getElementById("dlName");
+  const phoneInput=document.getElementById("dlPhone");
+  const emailInput=document.getElementById("dlEmail");
+  const addressInput=document.getElementById("dlAddress");
+  const itemsInput=document.getElementById("dlItems");
+  const notesInput=document.getElementById("dlNotes");
+
+  if(orderInput) orderInput.value=tx.reference||`SO-${isoDate.replace(/-/g,"")}`;
+  if(dateInput) dateInput.value=isoDate;
+  if(nameInput) nameInput.value=tx.party||"";
+  if(phoneInput) phoneInput.value=tx.phone||"";
+  if(emailInput) emailInput.value=tx.email||"";
+  if(addressInput) addressInput.value=tx.address||"";
+  if(itemsInput) itemsInput.value=itemSummary;
+  if(notesInput) notesInput.value=tx.notes||"";
+
+  updateDeliveryLabel();
+}
+
+function updateDeliveryLabel(){
+  const orderNo=document.getElementById("dlOrderNo")?.value.trim()||"-";
+  const rawDate=document.getElementById("dlDate")?.value;
+  const deliveryType=document.getElementById("dlType")?.value||"Standard";
+  const name=document.getElementById("dlName")?.value.trim()||"Recipient Name";
+  const phone=document.getElementById("dlPhone")?.value.trim()||"-";
+  const email=document.getElementById("dlEmail")?.value.trim()||"-";
+  const address=document.getElementById("dlAddress")?.value.trim();
+  const city=document.getElementById("dlCity")?.value.trim();
+  const postal=document.getElementById("dlPostal")?.value.trim();
+  const items=document.getElementById("dlItems")?.value.trim()||"No items added yet.";
+  const notes=document.getElementById("dlNotes")?.value.trim()||"-";
+  const dateValue=rawDate?new Date(`${rawDate}T00:00:00`).toLocaleDateString():"-";
+
+  const addressParts=[address, [city,postal].filter(Boolean).join(", ")].filter(Boolean);
+  const fullAddress=addressParts.length?addressParts.join("\n"):"Address line, city, postal code";
+
+  document.getElementById("pvOrderNo").textContent=orderNo;
+  document.getElementById("pvDate").textContent=dateValue;
+  document.getElementById("pvType").textContent=deliveryType;
+  document.getElementById("pvName").textContent=name;
+  document.getElementById("pvPhone").textContent=phone;
+  document.getElementById("pvEmail").textContent=email;
+  document.getElementById("pvAddress").textContent=fullAddress;
+  document.getElementById("pvItems").textContent=items;
+  document.getElementById("pvNotes").textContent=notes;
+}
+
+function clearDeliveryForm(){
+  ["dlOrderNo","dlDate","dlName","dlPhone","dlEmail","dlAddress","dlCity","dlPostal","dlItems","dlNotes"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+  const dlType=document.getElementById("dlType");
+  if(dlType) dlType.value="Standard";
+  updateDeliveryLabel();
+}
+
+function printDeliveryLabel(){
+  updateDeliveryLabel();
+  window.print();
+}
+
+
+async function uploadImage(file,sku){
+  if(!file) return null;
+  const ext=(file.name.split(".").pop()||"jpg").toLowerCase();
+  const path=`${sku}-${Date.now()}.${ext}`;
+  const {error}=await sb.storage.from("product-images").upload(path,file);
+  if(error) throw error;
+  return sb.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+}
+
+async function uploadImages(files,sku){
+  const uploaded=[];
+  for(const file of Array.from(files||[])){
+    const url=await uploadImage(file,`${sku}-gallery`);
+    if(url) uploaded.push(url);
+  }
+  return uploaded;
+}
+
+async function saveProduct(){
+  try{
+    const sku=document.getElementById("sku").value.trim();
+    const name=document.getElementById("productName").value.trim();
+    if(!sku||!name) throw new Error("SKU and Product Name are required.");
+    const imageUrl=await uploadImage(document.getElementById("productImage").files[0],sku);
+    const galleryImages=await uploadImages(document.getElementById("galleryImages").files,sku);
+    const sizes=getSelectedSizes();
+    if(!sizes.length) throw new Error("Select at least one size and enter its quantity.");
+    const articleDetails=sizes.map(s=>`${s.key}:${s.value}`).join(", ");
+    const openingStockValue=sizes.reduce((sum,s)=>sum+s.value,0);
+    const row={
+      sku,name,
+      category:document.getElementById("category").value.trim(),
+      colour:document.getElementById("colour").value.trim(),
+      size:'',
+      article_details:articleDetails,
+      size_details:Object.fromEntries(sizes.map(s=>[s.key,s.value])),
+      opening_stock:openingStockValue,
+      cost_price:Number(document.getElementById("costPrice").value||0),
+      selling_price:Number(document.getElementById("sellingPrice").value||0),
+      reorder_level:Number(document.getElementById("reorderLevel").value||5),
+      image_url:imageUrl,
+      gallery_images:galleryImages
+    };
+    const {error}=await sb.from("products").insert(row);
+    if(error) throw error;
+    status("productStatus","Product saved successfully with all selected sizes.");
+    resetProductForm();
+    await Promise.all([loadProducts(),loadDashboard()]);
+  }catch(e){status("productStatus",e.message,false)}
+}
+
+async function loadProducts(){
+  const {data,error}=await sb.from("products").select("id,sku,name,article_details,size_details").order("name");
+  if(error) return;
+  productsCache=data||[];
+  const s=document.getElementById("txProduct");s.innerHTML="";
+  productsCache.forEach(p=>{
+    const o=document.createElement("option");o.value=p.id;o.textContent=`${p.name} — ${p.sku}`;s.appendChild(o);
+  });
+  await updateSizeOptions();
+}
+
+const AVAILABLE_SIZES=["XS","S","M","L","XL","XXL","3XL","4XL"];
+
+function renderSelectedSizeInputs(){
+  renderSizeInputs("sizeRows","",{});
+}
+
+function renderSizeInputs(containerId,prefix,selectedSizes){
+  const container=document.getElementById(containerId);
+  if(!container) return;
+  container.innerHTML="";
+  AVAILABLE_SIZES.forEach((size,index)=>{
+    const currentValue=Number(selectedSizes?.[size]||0);
+    const isChecked=currentValue>0;
+    const card=document.createElement("div");
+    card.className=`size-card${isChecked?"":" disabled"}`;
+    card.innerHTML=`
+      <label>
+        <input class="size-checkbox" id="${prefix}sizeCheck${index}" type="checkbox" value="${size}"
+          ${isChecked?"checked":""} onchange="toggleSizeQuantity('${prefix}',${index})">
+        <strong>${size}</strong>
+      </label>
+      <input class="size-quantity" id="${prefix}sizeQty${index}" type="number" min="0" value="${currentValue || 0}"
+        placeholder="Quantity" ${isChecked?"":"disabled"}>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function toggleSizeQuantity(prefix,index){
+  const check=document.getElementById(`${prefix}sizeCheck${index}`);
+  const qty=document.getElementById(`${prefix}sizeQty${index}`);
+  const card=check.closest(".size-card");
+  qty.disabled=!check.checked;
+  card.classList.toggle("disabled",!check.checked);
+  if(check.checked){
+    if(Number(qty.value)<=0) qty.value=1;
+    qty.focus();
+  }else{
+    qty.value=0;
+  }
+}
+
+function getSelectedSizes(){
+  return getSelectedSizesForPrefix("");
+}
+
+function getSelectedSizesForPrefix(prefix){
+  const sizes=[];
+  AVAILABLE_SIZES.forEach((size,index)=>{
+    const checked=document.getElementById(`${prefix}sizeCheck${index}`)?.checked;
+    const qty=Number(document.getElementById(`${prefix}sizeQty${index}`)?.value||0);
+    if(checked && qty>0) sizes.push({key:size,value:qty});
+  });
+  return sizes;
+}
+
+function getSelectedSizesObject(prefix){
+  return Object.fromEntries(getSelectedSizesForPrefix(prefix).map(s=>[s.key,s.value]));
+}
+
+function resetProductForm(){
+  ["sku","productName","category","colour","costPrice","sellingPrice"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+  document.getElementById("reorderLevel").value=5;
+  document.getElementById("productImage").value="";
+  document.getElementById("galleryImages").value="";
+  renderSelectedSizeInputs();
+}
+
+function clearManageForm(){
+  editingArticleId=null;
+  document.getElementById("manageFormTitle").textContent="Select an article to edit";
+  ["editSku","editProductName","editColour","editCostPrice","editSellingPrice","editReorderLevel"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+  const editCategory=document.getElementById("editCategory");
+  if(editCategory) editCategory.value="Kurti";
+  const editProductImage=document.getElementById("editProductImage");
+  const editGalleryImages=document.getElementById("editGalleryImages");
+  if(editProductImage) editProductImage.value="";
+  if(editGalleryImages) editGalleryImages.value="";
+  renderSizeInputs("editSizeRows","edit",{});
+  const statusBox=document.getElementById("manageStatus");
+  if(statusBox) statusBox.className="status";
+  if(statusBox) statusBox.textContent="";
+}
+
+function populateManageFormFromProduct(product){
+  editingArticleId=product.id;
+  document.getElementById("manageFormTitle").textContent=`Editing ${product.name}`;
+  document.getElementById("editSku").value=product.sku||"";
+  document.getElementById("editProductName").value=product.name||"";
+  document.getElementById("editCategory").value=normalizeArticleType(product.category);
+  document.getElementById("editColour").value=product.colour||"";
+  document.getElementById("editCostPrice").value=product.cost_price||0;
+  document.getElementById("editSellingPrice").value=product.selling_price||0;
+  document.getElementById("editReorderLevel").value=product.reorder_level||5;
+  document.getElementById("editProductImage").value="";
+  document.getElementById("editGalleryImages").value="";
+  const sizeDetails=typeof product.size_details==='object' && product.size_details ? product.size_details : parseArticleDetails(product.article_details);
+  renderSizeInputs("editSizeRows","edit",sizeDetails);
+}
+
+function renderManageArticles(){
+  const list=document.getElementById("manageArticleList");
+  if(!list) return;
+  if(!inventoryProductsCache.length){
+    list.innerHTML='<div class="muted">No articles available.</div>';
+    return;
+  }
+  list.innerHTML="";
+  inventoryProductsCache.forEach(product=>{
+    const card=document.createElement("div");
+    card.className="manage-card";
+    const sizeNames=Object.keys(product.size_stock||{}).join(", ") || "No sizes";
+    const previewImage=product.image_url || (Array.isArray(product.gallery_images) && product.gallery_images.length ? product.gallery_images[0] : "");
+    card.innerHTML=`
+      <div class="manage-card-top">
+        <img class="manage-thumb" src="${previewImage || ""}" alt="${product.name}">
+        <div>
+          <strong>${product.name}</strong>
+          <div class="muted">${product.sku}</div>
+          <div class="muted">Type: ${normalizeArticleType(product.category)}</div>
+          <div class="muted">Sizes: ${sizeNames}</div>
+          <div class="muted">Stock: ${product.current_stock}</div>
+        </div>
+      </div>
+      <div class="manage-card-actions">
+        <button class="secondary" type="button" onclick="populateManageForm('${product.id}')">Edit</button>
+        <button class="secondary" type="button" onclick="deleteManagedArticle('${product.id}')">Delete</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function populateManageForm(productId){
+  const product=inventoryProductsCache.find(p=>p.id===productId);
+  if(!product) return;
+  populateManageFormFromProduct(product);
+}
+
+async function updateManagedArticle(){
+  try{
+    if(!editingArticleId) throw new Error("Select an article first.");
+    const sku=document.getElementById("editSku").value.trim();
+    const name=document.getElementById("editProductName").value.trim();
+    if(!sku||!name) throw new Error("SKU and Product Name are required.");
+    const sizeList=getSelectedSizesForPrefix("edit");
+    if(!sizeList.length) throw new Error("Select at least one size and enter its quantity.");
+    const articleDetails=sizeList.map(s=>`${s.key}:${s.value}`).join(", ");
+    const openingStockValue=sizeList.reduce((sum,s)=>sum+s.value,0);
+    const updateRow={
+      sku,
+      name,
+      category:document.getElementById("editCategory").value.trim(),
+      colour:document.getElementById("editColour").value.trim(),
+      size:'',
+      article_details:articleDetails,
+      size_details:Object.fromEntries(sizeList.map(s=>[s.key,s.value])),
+      opening_stock:openingStockValue,
+      cost_price:Number(document.getElementById("editCostPrice").value||0),
+      selling_price:Number(document.getElementById("editSellingPrice").value||0),
+      reorder_level:Number(document.getElementById("editReorderLevel").value||5)
+    };
+    const imageFile=document.getElementById("editProductImage").files[0];
+    if(imageFile) updateRow.image_url=await uploadImage(imageFile,sku);
+    const galleryFiles=document.getElementById("editGalleryImages").files;
+    if(galleryFiles && galleryFiles.length) updateRow.gallery_images=await uploadImages(galleryFiles,sku);
+    const {error}=await sb.from("products").update(updateRow).eq("id",editingArticleId);
+    if(error) throw error;
+    status("manageStatus","Article updated successfully.");
+    await Promise.all([loadProducts(),loadDashboard(),loadInventory()]);
+    renderManageArticles();
+  }catch(e){status("manageStatus",e.message,false)}
+}
+
+async function deleteManagedArticle(productId){
+  const id=productId||editingArticleId;
+  if(!id) return status("manageStatus","Select an article first.",false);
+  const product=inventoryProductsCache.find(p=>p.id===id);
+  const label=product?`${product.name} (${product.sku})`:'this article';
+  if(!confirm(`Delete ${label}? This will also remove its stock transactions.`)) return;
+  try{
+    const {error}=await sb.from("products").delete().eq("id",id);
+    if(error) throw error;
+    if(editingArticleId===id) clearManageForm();
+    status("manageStatus","Article deleted successfully.");
+    await Promise.all([loadProducts(),loadDashboard(),loadInventory()]);
+    renderManageArticles();
+  }catch(e){status("manageStatus",e.message,false)}
+}
+
+function parseArticleDetails(details){
+  const sizes={};
+  if(!details) return sizes;
+  details.split(/\s*,\s*/).forEach(pair=>{
+    const [key,val]=pair.split(':').map(s=>s.trim());
+    if(key) sizes[key]=Number(val)||0;
+  });
+  return sizes;
+}
+
+async function updateSizeOptions(){
+  const productId=document.getElementById("txProduct").value;
+  const sizeSelect=document.getElementById("txSize");
+  sizeSelect.innerHTML="";
+  const product=productsCache.find(p=>p.id===productId);
+
+  if(!product){
+    const opt=document.createElement("option");
+    opt.value="";
+    opt.textContent="No size data available";
+    sizeSelect.appendChild(opt);
+    return;
+  }
+
+  const baseSizes=(typeof product.size_details==='object' && product.size_details)
+    ? product.size_details
+    : parseArticleDetails(product.article_details);
+
+  let sizes={...baseSizes};
+  const {data:txs,error}=await sb.from("stock_transactions").select("size,transaction_type,quantity").eq("product_id",productId);
+  if(!error){
+    sizes=getSizeStock(baseSizes,txs||[]);
+  }
+
+  Object.keys(sizes).forEach(size=>{
+    const opt=document.createElement("option");
+    opt.value=size;
+    opt.textContent=`${size} (${sizes[size]} available)`;
+    sizeSelect.appendChild(opt);
+  });
+  if(sizeSelect.options.length===0){
+    const opt=document.createElement("option");
+    opt.value="";
+    opt.textContent="No size data available";
+    sizeSelect.appendChild(opt);
+  }
+}
+
+function getSizeStock(details, transactions){
+  const stock = typeof details==='object' && details ? {...details} : parseArticleDetails(details);
+  (transactions||[]).forEach(tx=>{
+    if(!tx.size) return;
+    const delta=tx.transaction_type==='IN'?Number(tx.quantity||0):-Number(tx.quantity||0);
+    stock[tx.size]=(stock[tx.size]||0)+delta;
+  });
+  return stock;
+}
+
+function normalizeArticleType(value){
+  const clean=(value||"").trim();
+  return clean || "Uncategorized";
+}
+
+function buildArticleTypeGroups(products){
+  const groups={ALL:{label:"All Products",count:products.length}};
+  products.forEach((product)=>{
+    const key=normalizeArticleType(product.category);
+    if(!groups[key]) groups[key]={label:key,count:0};
+    groups[key].count+=1;
+  });
+  return groups;
+}
+
+function renderArticleTypeList(){
+  const list=document.getElementById("articleTypeList");
+  if(!list) return;
+  const groups=buildArticleTypeGroups(inventoryProductsCache);
+  const entries=Object.entries(groups).sort((a,b)=>{
+    if(a[0]==="ALL") return -1;
+    if(b[0]==="ALL") return 1;
+    return a[0].localeCompare(b[0]);
+  });
+  list.innerHTML="";
+
+  if(!entries.length){
+    list.innerHTML='<div class="muted">No article types available.</div>';
+    return;
+  }
+
+  entries.forEach(([key,group])=>{
+    const button=document.createElement("button");
+    button.type="button";
+    button.className=`type-item${selectedArticleType===key?" active":""}`;
+    button.innerHTML=`<span>${group.label}</span><span class="type-count">${group.count}</span>`;
+    button.onclick=()=>{
+      selectedArticleType=key;
+      renderArticleTypeList();
+      renderInventoryProducts();
+    };
+    list.appendChild(button);
+  });
+}
+
+function renderInventoryProducts(){
+  const list=document.getElementById("inventoryList");
+  const title=document.getElementById("selectedTypeTitle");
+  const meta=document.getElementById("selectedTypeMeta");
+  if(!list || !title || !meta) return;
+
+  const selectedLabel=selectedArticleType==="ALL" ? "All Products" : selectedArticleType;
+  const filtered=selectedArticleType==="ALL"
+    ? inventoryProductsCache
+    : inventoryProductsCache.filter(p=>normalizeArticleType(p.category)===selectedArticleType);
+
+  title.textContent=selectedLabel;
+  meta.textContent=`${filtered.length} product${filtered.length===1?"":"s"}`;
+  list.innerHTML="";
+
+  if(!filtered.length){
+    list.innerHTML='<p class="muted">No products found for this article type.</p>';
+    return;
+  }
+
+  filtered.forEach(p=>{
+    const sizeStock=p.size_stock||{};
+    const sizeLines=Object.entries(sizeStock).map(([key,value])=>`<div class="muted">${key}: ${value}</div>`).join('');
+    const totalSizes=Object.values(sizeStock).reduce((sum,value)=>sum+Number(value||0),0);
+    const galleryImages=Array.isArray(p.gallery_images)
+      ? p.gallery_images
+      : (typeof p.gallery_images === 'string' && p.gallery_images ? JSON.parse(p.gallery_images) : []);
+    const galleryHtml=galleryImages.length
+      ? `<div class="gallery-strip">${galleryImages.map(url=>`<img src="${url}" alt="${p.name} gallery image">`).join('')}</div>`
+      : '';
+    const d=document.createElement("div");
+    d.className="product";
+    d.innerHTML=`<img src="${p.image_url||""}" alt="">
+      <div><strong>${p.name}</strong>
+      <div class="muted">${p.sku} · ${normalizeArticleType(p.category)}${p.colour?` · ${p.colour}`:''}${p.size?` · ${p.size}`:''}</div>
+      ${galleryHtml}
+      ${sizeLines}
+      <div>Size total: <strong>${totalSizes}</strong></div>
+      <div>Current stock: <strong>${p.current_stock}</strong></div></div>`;
+    list.appendChild(d);
+  });
+}
+
+async function saveTransaction(){
+  try{
+    const txType=document.getElementById("txType").value;
+    const productId=document.getElementById("txProduct").value;
+    const size=document.getElementById("txSize").value;
+    const qty=Number(document.getElementById("txQty").value);
+    if(!productId||qty<=0||!size) throw new Error("Select a product, size, and enter quantity.");
+    const product=productsCache.find(p=>p.id===productId);
+    if(!product) throw new Error("Selected product not found.");
+    const {data:existingTxs,error:txError}=await sb.from("stock_transactions").select("size,transaction_type,quantity").eq("product_id",productId);
+    if(txError) throw txError;
+    const currentSizes=getSizeStock(product.size_details||product.article_details, existingTxs);
+    if(txType==='OUT' && qty > (currentSizes[size]||0)){
+      throw new Error(`Cannot stock out ${qty} ${size} items; only ${(currentSizes[size]||0)} available.`);
+    }
+    const customerPhone=document.getElementById("txPhone")?.value.trim()||"";
+    const customerEmail=document.getElementById("txEmail")?.value.trim()||"";
+    const customerAddress=document.getElementById("txAddress")?.value.trim()||"";
+    if(txType==='OUT' && (!customerPhone || !customerAddress)){
+      throw new Error("For Stock Out, add customer phone and address for the delivery label.");
+    }
+    const row={
+      product_id:productId,
+      size,
+      transaction_type:txType,
+      quantity:qty,
+      unit_price:Number(document.getElementById("txPrice").value||0),
+      party:document.getElementById("txParty").value.trim(),
+      reference:document.getElementById("txReference").value.trim(),
+      notes:document.getElementById("txNotes").value.trim(),
+      phone:customerPhone,
+      email:customerEmail,
+      address:customerAddress
+    };
+    const {error}=await sb.from("stock_transactions").insert(row);
+    if(error) throw error;
+    status("txStatus",txType==='OUT' ? "Stock Out saved. Delivery label is ready to print." : "Transaction saved.");
+    if(txType==='OUT'){
+      prefillDeliveryFromTransaction({
+        ...row,
+        phone:customerPhone,
+        email:customerEmail,
+        address:customerAddress
+      },product);
+      showTab("delivery");
+    }
+    document.getElementById("txQty").value="";
+    document.getElementById("txNotes").value="";
+    await Promise.all([loadDashboard(), loadInventory(), loadCustomers()]);
+    await updateSizeOptions();
+  }catch(e){status("txStatus",e.message,false)}
+}
+
+async function loadInventory(){
+  const [prodRes, txRes] = await Promise.all([
+    sb.from("products").select("id,sku,name,category,colour,size,article_details,size_details,opening_stock,cost_price,selling_price,reorder_level,image_url,gallery_images").order("name"),
+    sb.from("stock_transactions").select("product_id,size,transaction_type,quantity")
+  ]);
+  const list=document.getElementById("inventoryList");
+  if(prodRes.error){list.innerHTML=`<p>${prodRes.error.message}</p>`;return}
+  if(txRes.error){list.innerHTML=`<p>${txRes.error.message}</p>`;return}
+  const transactions=txRes.data||[];
+  inventoryProductsCache=(prodRes.data||[]).map(p=>{
+    const txForProduct=transactions.filter(t=>t.product_id===p.id);
+    const sizeStock=getSizeStock(p.size_details||p.article_details, txForProduct);
+    return {
+      ...p,
+      size_stock:sizeStock,
+      current_stock: Number(p.opening_stock || 0) + txForProduct.reduce((sum,t)=>sum + (t.transaction_type==='IN' ? Number(t.quantity||0) : -Number(t.quantity||0)), 0)
+    };
+  });
+
+  const selectedExists=selectedArticleType==="ALL" || inventoryProductsCache.some(p=>normalizeArticleType(p.category)===selectedArticleType);
+  if(!selectedExists) selectedArticleType="ALL";
+
+  renderArticleTypeList();
+  renderInventoryProducts();
+}
+
+function normalizeCustomerValue(value,fallback){
+  const clean=(value||"").trim();
+  return clean || fallback;
+}
+
+function buildCustomerKey(tx){
+  return [normalizeCustomerValue(tx.party,"Walk-in Customer"), tx.phone||"", tx.email||"", tx.address||""].join("|||");
+}
+
+function customerMatchesSearch(customer, query){
+  if(!query) return true;
+  const haystack=[
+    customer.name,
+    customer.phone,
+    customer.email,
+    customer.address,
+    customer.items.map(item=>[
+      item.name,
+      item.sku,
+      item.category,
+      item.size,
+      item.reference,
+      item.notes
+    ].join(" ")).join(" ")
+  ].join(" ").toLowerCase();
+  return haystack.includes(query);
+}
+
+function getSelectedCustomer(){
+  return customerEntriesCache.find(customer=>customer.key===selectedCustomerKey) || customerEntriesCache[0] || null;
+}
+
+function setCustomerStatus(message, ok=true){
+  status("customerManageStatus",message,ok);
+}
+
+function fillCustomerEditForm(){
+  const selected=getSelectedCustomer();
+  if(!selected) return;
+  editingCustomerKey=selected.key;
+  const name=document.getElementById("customerEditName");
+  const phone=document.getElementById("customerEditPhone");
+  const email=document.getElementById("customerEditEmail");
+  const address=document.getElementById("customerEditAddress");
+  if(name) name.value=selected.name||"";
+  if(phone) phone.value=selected.phone||"";
+  if(email) email.value=selected.email||"";
+  if(address) address.value=selected.address||"";
+  const statusBox=document.getElementById("customerManageStatus");
+  if(statusBox) statusBox.className="status";
+  if(statusBox) statusBox.textContent="";
+}
+
+async function saveManagedCustomer(){
+  try{
+    const selected=customerEntriesCache.find(customer=>customer.key===editingCustomerKey) || getSelectedCustomer();
+    if(!selected) throw new Error("Select a customer first.");
+    const newName=document.getElementById("customerEditName").value.trim();
+    const newPhone=document.getElementById("customerEditPhone").value.trim();
+    const newEmail=document.getElementById("customerEditEmail").value.trim();
+    const newAddress=document.getElementById("customerEditAddress").value.trim();
+    if(!newName) throw new Error("Customer name is required.");
+    const customerTxIds=(selected.items||[]).map(item=>item.id);
+    if(!customerTxIds.length) throw new Error("No transactions found for this customer.");
+    const {error}=await sb.from("stock_transactions").update({
+      party:newName,
+      phone:newPhone,
+      email:newEmail,
+      address:newAddress
+    }).in("id",customerTxIds);
+    if(error) throw error;
+    setCustomerStatus("Customer updated successfully.");
+    await Promise.all([loadCustomers(),loadDashboard(),loadInventory()]);
+    const updated=customerEntriesCache.find(customer=>customer.items.some(item=>customerTxIds.includes(item.id)));
+    if(updated){
+      selectedCustomerKey=updated.key;
+      editingCustomerKey=updated.key;
+    }
+    renderCustomers();
+    fillCustomerEditForm();
+  }catch(e){setCustomerStatus(e.message,false)}
+}
+
+async function deleteManagedCustomer(){
+  try{
+    const selected=customerEntriesCache.find(customer=>customer.key===editingCustomerKey) || getSelectedCustomer();
+    if(!selected) throw new Error("Select a customer first.");
+    const customerTxIds=(selected.items||[]).map(item=>item.id);
+    if(!customerTxIds.length) throw new Error("No transactions found for this customer.");
+    if(!confirm(`Delete ${selected.name}? This will remove all stock-out records for this customer.`)) return;
+    const {error}=await sb.from("stock_transactions").delete().in("id",customerTxIds);
+    if(error) throw error;
+    setCustomerStatus("Customer deleted successfully.");
+    selectedCustomerKey="";
+    editingCustomerKey="";
+    await Promise.all([loadCustomers(),loadDashboard(),loadInventory()]);
+    renderCustomers();
+  }catch(e){setCustomerStatus(e.message,false)}
+}
+
+async function openCustomerArticle(productId){
+  if(!productId) return;
+  if(!inventoryProductsCache.length) await loadInventory();
+  const product=inventoryProductsCache.find(item=>item.id===productId) || productsCache.find(item=>item.id===productId);
+  if(!product) return;
+  await showTab("manageArticles");
+  populateManageFormFromProduct(product);
+  renderManageArticles();
+}
+
+function getCustomerItemImage(product){
+  if(product.image_url) return product.image_url;
+  if(Array.isArray(product.gallery_images) && product.gallery_images.length) return product.gallery_images[0];
+  if(typeof product.gallery_images === 'string' && product.gallery_images){
+    try{
+      const parsed=JSON.parse(product.gallery_images);
+      if(Array.isArray(parsed) && parsed.length) return parsed[0];
+    }catch(_error){}
+  }
+  return "";
+}
+
+async function loadCustomers(){
+  const txQuery=sb.from("stock_transactions").select("id,product_id,size,transaction_type,quantity,party,reference,notes,phone,email,address,created_at").eq("transaction_type","OUT").order("created_at",{ascending:false});
+  const prodQuery=sb.from("products").select("id,sku,name,category,colour,size,article_details,size_details,opening_stock,cost_price,selling_price,reorder_level,image_url,gallery_images");
+  const [txRes, prodRes] = await Promise.all([txQuery, prodQuery]);
+  if(txRes.error || prodRes.error) return;
+
+  const productsById=(prodRes.data||[]).reduce((map,product)=>{
+    map[product.id]=product;
+    return map;
+  },{});
+  const grouped=new Map();
+
+  (txRes.data||[]).forEach(tx=>{
+    const customerName=normalizeCustomerValue(tx.party,"Walk-in Customer");
+    const key=buildCustomerKey(tx);
+    const product=productsById[tx.product_id] || {};
+    const current=grouped.get(key) || {
+      key,
+      name:customerName,
+      phone:tx.phone||"",
+      email:tx.email||"",
+      address:tx.address||"",
+      firstSeen:tx.created_at,
+      lastSeen:tx.created_at,
+      items:[],
+      totalQty:0,
+      totalOrders:0
+    };
+    current.lastSeen=tx.created_at;
+    current.totalQty+=Number(tx.quantity||0);
+    current.totalOrders+=1;
+    current.items.push({
+      id:tx.id,
+      product_id:tx.product_id,
+      name:product.name||"Unknown Product",
+      sku:product.sku||"",
+      image_url:getCustomerItemImage(product),
+      size:tx.size||"",
+      quantity:Number(tx.quantity||0),
+      created_at:tx.created_at,
+      category:product.category||"",
+      notes:tx.notes||"",
+      reference:tx.reference||""
+    });
+    grouped.set(key,current);
+  });
+
+  customerEntriesCache=Array.from(grouped.values()).sort((a,b)=>{
+    const left=(a.name||"").toLowerCase();
+    const right=(b.name||"").toLowerCase();
+    return left.localeCompare(right) || new Date(b.lastSeen)-new Date(a.lastSeen);
+  });
+
+  if(selectedCustomerKey && !customerEntriesCache.some(customer=>customer.key===selectedCustomerKey)){
+    selectedCustomerKey=customerEntriesCache[0]?.key || "";
+  }
+  if(!selectedCustomerKey && customerEntriesCache.length){
+    selectedCustomerKey=customerEntriesCache[0].key;
+  }
+}
+
+function renderCustomers(){
+  const list=document.getElementById("customerList");
+  const empty=document.getElementById("customerDetailEmpty");
+  const content=document.getElementById("customerDetailContent");
+  const title=document.getElementById("customerDetailTitle");
+  const search=document.getElementById("customerSearch");
+  if(!list || !empty || !content || !title) return;
+
+  if(search) customerSearchTerm=search.value.trim().toLowerCase();
+
+  const filteredCustomers=customerEntriesCache.filter(customer=>customerMatchesSearch(customer,customerSearchTerm));
+
+  list.innerHTML="";
+  if(!customerEntriesCache.length){
+    list.innerHTML='<div class="muted">No customers found yet. Stock out an article to auto-create customers here.</div>';
+    empty.classList.remove("hidden");
+    content.classList.add("hidden");
+    title.textContent="Select a customer";
+    return;
+  }
+
+  if(!filteredCustomers.length){
+    list.innerHTML='<div class="muted">No customers match your search.</div>';
+    empty.classList.remove("hidden");
+    content.classList.add("hidden");
+    title.textContent="Select a customer";
+    return;
+  }
+
+  filteredCustomers.forEach(customer=>{
+    const card=document.createElement("button");
+    card.type="button";
+    card.className=`customer-card${selectedCustomerKey===customer.key?" active":""}`;
+    card.innerHTML=`
+      <div class="customer-header">
+        <div>
+          <strong>${customer.name}</strong>
+          <div class="muted">${customer.phone || "No phone"}</div>
+        </div>
+        <div class="muted">${customer.totalOrders} item${customer.totalOrders===1?"":"s"}</div>
+      </div>
+    `;
+    card.onclick=()=>{
+      selectedCustomerKey=customer.key;
+      renderCustomers();
+    };
+    list.appendChild(card);
+  });
+
+  const selected=filteredCustomers.find(customer=>customer.key===selectedCustomerKey) || filteredCustomers[0];
+  if(!selected){
+    empty.classList.remove("hidden");
+    content.classList.add("hidden");
+    title.textContent="Select a customer";
+    return;
+  }
+
+  empty.classList.add("hidden");
+  content.classList.remove("hidden");
+  const manageBox=document.getElementById("customerManageBox");
+  if(manageBox) manageBox.classList.toggle("hidden",!customerManageMode);
+  title.textContent=selected.name;
+  document.getElementById("customerDetailName").textContent=selected.name;
+  document.getElementById("customerDetailPhone").textContent=`Phone: ${selected.phone || "-"}`;
+  document.getElementById("customerDetailEmail").textContent=`Email: ${selected.email || "-"}`;
+  document.getElementById("customerDetailAddress").textContent=`Address: ${selected.address || "-"}`;
+  document.getElementById("customerDetailCount").textContent=`Total items: ${selected.totalQty}`;
+  document.getElementById("customerDetailOrders").textContent=`Total purchases: ${selected.totalOrders}`;
+  document.getElementById("customerDetailLast").textContent=`Last seen: ${new Date(selected.lastSeen).toLocaleString()}`;
+
+  const itemsBox=document.getElementById("customerItems");
+  itemsBox.innerHTML="";
+  selected.items.forEach(item=>{
+    const itemCard=document.createElement("div");
+    itemCard.className="customer-item-card";
+    const placeholderText=(item.category||item.name||"?").slice(0,2).toUpperCase();
+    const imageMarkup=item.image_url
+      ? `<div class="customer-item-visual"><img src="${item.image_url}" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden')"><div class="customer-item-placeholder hidden">${placeholderText}</div></div>`
+      : `<div class="customer-item-placeholder">${placeholderText}</div>`;
+    itemCard.innerHTML=`
+      ${imageMarkup}
+      <div class="customer-meta">
+        <div class="customer-article-label">${item.name}</div>
+        <div class="customer-article-meta">
+          ${item.sku ? `<span class="customer-article-badge">SKU: ${item.sku}</span>` : ""}
+          <span class="customer-article-badge">${normalizeArticleType(item.category)}</span>
+          <span class="customer-article-badge">Size ${item.size || "-"}</span>
+        </div>
+        <div class="muted">Qty: ${item.quantity}</div>
+        <div class="muted">Date: ${new Date(item.created_at).toLocaleString()}</div>
+        <div class="muted">${item.reference ? `Ref: ${item.reference}` : ""}</div>
+        <div class="muted">${item.notes ? item.notes : ""}</div>
+        <button class="customer-item-link" type="button" onclick="openCustomerArticle('${item.product_id || ""}')">View Article</button>
+      </div>
+    `;
+    itemsBox.appendChild(itemCard);
+  });
+
+  if(customerManageMode) fillCustomerEditForm();
+  else {
+    const statusBox=document.getElementById("customerManageStatus");
+    if(statusBox){
+      statusBox.className="status";
+      statusBox.textContent="";
+    }
+  }
+}
+
+async function loadDashboard(){
+  const start=new Date();
+  start.setHours(0,0,0,0);
+
+  const [inventoryRes,todayRes]=await Promise.all([
+    sb.from("products").select("id,opening_stock,reorder_level"),
+    sb.from("stock_transactions").select("id",{count:"exact",head:true}).gte("created_at",start.toISOString())
+  ]);
+
+  if(!inventoryRes.error){
+    const data=(inventoryRes.data||[]).map(p=>({
+      ...p,
+      current_stock: Number(p.opening_stock || 0)
+    }));
+    document.getElementById("kpiProducts").textContent=data.length;
+    document.getElementById("kpiUnits").textContent=data.reduce((a,p)=>a+Number(p.current_stock||0),0);
+    document.getElementById("kpiLow").textContent=data.filter(p=>Number(p.current_stock)<=Number(p.reorder_level)).length;
+  }
+
+  const today=document.getElementById("kpiToday");
+  if(today) today.textContent=todayRes.error?0:(todayRes.count||0);
+}
+
+async function exportCSV(){
+  const {data,error}=await sb.from("products").select("id,sku,name,category,colour,size,opening_stock,cost_price,selling_price,reorder_level,image_url").order("name");
+  if(error) return alert(error.message);
+  const rows=data||[];
+  if(!rows.length) return alert("No inventory data to export.");
+  const headers=Object.keys(rows[0]);
+  const csv=[headers.join(",")].concat(rows.map(r=>headers.map(h=>`"${String(r[h]??"").replace(/"/g,'""')}"`).join(","))).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Sufi_Thread_Inventory.csv";a.click();
+}
+
+renderSelectedSizeInputs();
+toggleTransactionCustomerFields();
+updateDeliveryLabel();
+
+document.addEventListener("click",(event)=>{
+  const menu=document.getElementById("quickMenu");
+  const menuBtn=document.getElementById("quickMenuBtn");
+  if(!menu || menu.classList.contains("hidden")) return;
+  if(menu.contains(event.target) || (menuBtn && menuBtn.contains(event.target))) return;
+  closeQuickMenu();
+});
+
+sb.auth.getSession().then(async({data})=>{
+  if(data.session){
+    document.getElementById("authCard").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    await Promise.all([loadProducts(),loadDashboard()]);
+  }
+});
+if("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js");
+</script>
+</body>
+</html>
