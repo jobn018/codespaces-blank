@@ -2259,7 +2259,11 @@ function populateManageFormFromProduct(product){
   document.getElementById("editReorderLevel").value=product.reorder_level||5;
   document.getElementById("editProductImage").value="";
   document.getElementById("editGalleryImages").value="";
-  const sizeDetails=typeof product.size_details==='object' && product.size_details ? product.size_details : parseArticleDetails(product.article_details);
+  const sizeDetails=(typeof product.size_stock==='object' && product.size_stock && Object.keys(product.size_stock).length)
+    ? product.size_stock
+    : ((typeof product.size_details==='object' && product.size_details)
+      ? product.size_details
+      : parseArticleDetails(product.article_details));
   renderSizeInputs("editSizeRows","edit",sizeDetails);
 }
 
@@ -2274,7 +2278,8 @@ function renderManageArticles(){
   inventoryProductsCache.forEach(product=>{
     const card=document.createElement("div");
     card.className="manage-card";
-    const sizeNames=Object.keys(product.size_stock||{}).join(", ") || "No sizes";
+    const sizeStock=product.size_stock||{};
+    const sizeNames=Object.entries(sizeStock).map(([size,qty])=>`${size}: ${Number(qty||0)}`).join(", ") || "No sizes";
     const previewImage=product.image_url || (Array.isArray(product.gallery_images) && product.gallery_images.length ? product.gallery_images[0] : "");
     card.innerHTML=`
       <div class="manage-card-top">
@@ -2283,8 +2288,8 @@ function renderManageArticles(){
           <strong>${product.name}</strong>
           <div class="muted">${product.sku}</div>
           <div class="muted">Type: ${normalizeArticleType(product.category)}</div>
-          <div class="muted">Sizes: ${sizeNames}</div>
-          <div class="muted">Stock: ${product.current_stock}</div>
+          <div class="muted">Available Sizes: ${sizeNames}</div>
+          <div class="muted">Total Available: ${product.current_stock}</div>
         </div>
       </div>
       <div class="manage-card-actions">
