@@ -594,6 +594,83 @@
       align-items:start;
     }
 
+    .customer-portal-layout{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:1.2fr .9fr;
+      gap:14px;
+      align-items:start;
+    }
+
+    .customer-portal-catalog,
+    .customer-portal-order{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#fffaf7;
+      padding:12px;
+    }
+
+    .customer-portal-grid{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+      gap:10px;
+      max-height:680px;
+      overflow:auto;
+    }
+
+    .portal-product-card{
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      padding:10px;
+    }
+
+    .portal-product-top{
+      display:grid;
+      grid-template-columns:58px 1fr;
+      gap:9px;
+      align-items:start;
+    }
+
+    .portal-product-top img{
+      width:58px;
+      height:58px;
+      border-radius:10px;
+      object-fit:cover;
+      border:1px solid var(--border);
+      background:#f1e8e3;
+    }
+
+    .portal-product-form{
+      margin-top:8px;
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:8px;
+      align-items:end;
+    }
+
+    .portal-product-form button{
+      margin-top:0;
+      width:100%;
+      padding:10px;
+      font-size:13px;
+    }
+
+    .ref-summary-card{
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      padding:10px;
+    }
+
+    .ref-summary-badges{
+      margin-top:7px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+
     .manage-list,
     .manage-form{
       border:1px solid var(--border);
@@ -1142,6 +1219,7 @@
       .inventory-layout{grid-template-columns:1fr}
       .manage-layout{grid-template-columns:1fr}
       .customer-layout{grid-template-columns:1fr}
+      .customer-portal-layout{grid-template-columns:1fr}
       .customer-detail-top{grid-template-columns:1fr}
     }
 
@@ -1160,6 +1238,7 @@
       .bulk-builder-actions{grid-template-columns:1fr}
       .bulk-row-grid{grid-template-columns:1fr}
       .size-grid{grid-template-columns:repeat(2,1fr)}
+      .portal-product-form{grid-template-columns:1fr}
       .card{padding:16px;border-radius:17px}
       .bottom-nav button{font-size:14px}
       .bottom-nav button span{font-size:20px}
@@ -1194,7 +1273,66 @@
     <button class="secondary" onclick="signUp()">Create Admin Account</button>
     <button class="secondary" onclick="sendResetLink()">Reset Password Email</button>
     <button class="secondary" onclick="resendConfirmationEmail()">Resend Confirmation Email</button>
+    <button class="secondary" onclick="openCustomerPortal()">Open Customer Storefront</button>
     <div id="authStatus" class="status"></div>
+  </div>
+
+  <div id="customerPortal" class="card hidden">
+    <div class="section-title"><h2>Customer Storefront</h2></div>
+    <div class="muted">Browse live inventory, select products, and place order with free payment options like Cash on Delivery or Manual Bank Transfer.</div>
+    <div class="customer-portal-layout">
+      <div class="customer-portal-catalog">
+        <div class="type-items-header">
+          <h3>Available Inventory</h3>
+          <button class="secondary" type="button" onclick="loadCustomerPortalInventory()">Refresh</button>
+        </div>
+        <input id="portalSearch" type="search" placeholder="Search by article name, type, or SKU" oninput="renderCustomerPortalProducts()">
+        <div id="portalInventoryList" class="customer-portal-grid"></div>
+      </div>
+      <div class="customer-portal-order">
+        <h3>Your Order</h3>
+        <div id="portalCartMeta" class="order-cart-meta">No items selected yet.</div>
+        <div id="portalCartItems" class="order-cart-items"></div>
+
+        <label>Full Name</label><input id="portalName" placeholder="Customer full name">
+        <label>Phone</label><input id="portalPhone" placeholder="+92...">
+        <label>Email</label><input id="portalEmail" type="email" placeholder="customer@email.com">
+        <label>Address</label><textarea id="portalAddress" placeholder="House, street, area"></textarea>
+        <div class="grid">
+          <div><label>City</label><input id="portalCity" placeholder="Karachi"></div>
+          <div><label>Postal Code</label><input id="portalPostal" placeholder="74000"></div>
+        </div>
+        <div class="grid">
+          <div>
+            <label>Order Type</label>
+            <select id="portalOrderType">
+              <option value="Online">Online</option>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Walk-in">Walk-in</option>
+            </select>
+          </div>
+          <div>
+            <label>Payment Method (Free Setup)</label>
+            <select id="portalPaymentMethod">
+              <option value="Cash on Delivery">Cash on Delivery</option>
+              <option value="Manual Bank Transfer">Manual Bank Transfer</option>
+              <option value="EasyPaisa/JazzCash">EasyPaisa/JazzCash</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid">
+          <div><label>Referral Code</label><input id="portalReferralCode" placeholder="Optional referral code"></div>
+          <div><label>Order Reference</label><input id="portalReference" placeholder="Optional reference"></div>
+        </div>
+        <label>Order Notes</label><textarea id="portalNotes" placeholder="Any notes for this order"></textarea>
+        <div class="grid">
+          <div><button class="secondary" type="button" onclick="closeCustomerPortal()">Back To Admin Login</button></div>
+          <div><button class="primary" type="button" onclick="submitCustomerPortalOrder()">Place Order</button></div>
+        </div>
+        <div id="portalStatus" class="status"></div>
+      </div>
+    </div>
   </div>
 
   <div id="app" class="hidden">
@@ -1220,6 +1358,7 @@
         <div id="quickMenu" class="quick-menu hidden">
           <button onclick="handleQuickMenuAction('article-types')">Article Types</button>
           <button onclick="handleQuickMenuAction('manage-articles')">Manage Articles</button>
+          <button onclick="handleQuickMenuAction('referral-partners')">Referral Partners</button>
           <button onclick="handleQuickMenuAction('manage-customers')">Manage Customers</button>
           <button onclick="handleQuickMenuAction('customers')">Customers</button>
           <button onclick="handleQuickMenuAction('print-label')">Print Delivery Label</button>
@@ -1270,10 +1409,39 @@
       <label>Supplier / Customer Name</label><input id="txParty">
       <label>Reference</label><input id="txReference">
 
+      <div id="txOrderFields" class="grid hidden">
+        <div>
+          <label>Order Type</label>
+          <select id="txOrderType">
+            <option value="Online">Online</option>
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Walk-in">Walk-in</option>
+          </select>
+        </div>
+        <div>
+          <label>Payment Method (Free Setup)</label>
+          <select id="txPaymentMethod">
+            <option value="Cash on Delivery">Cash on Delivery</option>
+            <option value="Manual Bank Transfer">Manual Bank Transfer</option>
+            <option value="EasyPaisa/JazzCash">EasyPaisa/JazzCash</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="txReferralFields" class="grid hidden">
+        <div><label>Referral Code</label><input id="txReferralCode" placeholder="Optional referral code"></div>
+        <div><label>Payment Status</label><select id="txPaymentStatus"><option value="Pending">Pending</option><option value="Paid">Paid</option></select></div>
+      </div>
+
       <div id="customerDeliveryFields" class="hidden">
         <label>Customer Phone</label><input id="txPhone" placeholder="+92...">
         <label>Customer Email</label><input id="txEmail" type="email" placeholder="customer@email.com">
         <label>Customer Address</label><textarea id="txAddress" placeholder="House, street, area, city, postal code"></textarea>
+        <div class="grid">
+          <div><label>City</label><input id="txCity" placeholder="Karachi"></div>
+          <div><label>Postal Code</label><input id="txPostal" placeholder="74000"></div>
+        </div>
         <div class="delivery-hint">After saving Stock Out, these details will be copied into Delivery Label so you can print immediately.</div>
       </div>
 
@@ -1461,6 +1629,38 @@
       </div>
     </section>
 
+    <section id="referralPartners" class="card hidden">
+      <div class="section-title"><h2>Referral Partners</h2></div>
+      <div class="muted">Create referral codes for your hired team. Every customer order with that code is tracked automatically by articles sold, order type, and customer details.</div>
+      <div class="manage-layout">
+        <div class="manage-list">
+          <h3>Partner Codes</h3>
+          <div id="referralPartnerList" class="manage-list-items"></div>
+        </div>
+        <div class="manage-form">
+          <h3>Create / Update Partner</h3>
+          <div class="grid">
+            <div><label>Partner Name</label><input id="refPartnerName" placeholder="Sales rep name"></div>
+            <div><label>Referral Code</label><input id="refPartnerCode" placeholder="e.g. ALI10"></div>
+          </div>
+          <div class="grid">
+            <div><label>Phone</label><input id="refPartnerPhone" placeholder="Optional"></div>
+            <div><label>Email</label><input id="refPartnerEmail" type="email" placeholder="Optional"></div>
+          </div>
+          <label>Notes</label><textarea id="refPartnerNotes" placeholder="Optional notes"></textarea>
+          <div class="form-actions">
+            <button class="secondary" type="button" onclick="clearReferralPartnerForm()">Clear</button>
+            <button class="primary" type="button" onclick="saveReferralPartner()">Save Partner</button>
+          </div>
+          <div id="refPartnerStatus" class="status"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;box-shadow:none">
+        <div class="section-title"><h2>Sales Tracking By Referral</h2></div>
+        <div id="referralSalesSummary" class="customer-items"></div>
+      </div>
+    </section>
+
     <section id="delivery" class="card hidden">
       <div class="section-title"><h2>Delivery Label</h2></div>
       <div class="delivery-grid">
@@ -1543,6 +1743,10 @@ let isRecoveryMode=false;
 let transactionOrderItems=[];
 let bulkArticleRows=[];
 let lastSavedCustomerKey="";
+let referralPartnersCache=[];
+let editingReferralPartnerId=null;
+let portalInventoryCache=[];
+let portalCartItems=[];
 
 function getAuthRedirectUrl(){
   return `${location.origin}${location.pathname}`;
@@ -1649,7 +1853,7 @@ async function completePasswordRecovery(){
 async function signOut(){await sb.auth.signOut();location.reload()}
 
 async function showTab(id,btn){
-  ["dashboard","transaction","product","inventory","manageArticles","customers","delivery"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+  ["dashboard","transaction","product","inventory","manageArticles","customers","referralPartners","delivery"].forEach(x=>document.getElementById(x).classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
 
   document.querySelectorAll(".tab,.bottom-item").forEach(x=>{
@@ -1665,6 +1869,10 @@ async function showTab(id,btn){
   if(id==="customers"){
     await loadCustomers();
     renderCustomers();
+  }
+  if(id==="referralPartners"){
+    await loadReferralPartners();
+    await renderReferralPartnerSalesSummary();
   }
   if(id==="dashboard") await loadDashboard();
   if(id==="delivery") updateDeliveryLabel();
@@ -1688,6 +1896,197 @@ function closeQuickMenu(){
   if(menu) menu.classList.add("hidden");
 }
 
+function normalizeReferralCode(value){
+  return (value||"").trim().toUpperCase();
+}
+
+function generateOrderId(prefix="ORD"){
+  const stamp=new Date().toISOString().replace(/[-:.TZ]/g,"").slice(0,14);
+  const rand=Math.random().toString(36).slice(2,6).toUpperCase();
+  return `${prefix}-${stamp}-${rand}`;
+}
+
+function clearReferralPartnerForm(){
+  editingReferralPartnerId=null;
+  ["refPartnerName","refPartnerCode","refPartnerPhone","refPartnerEmail","refPartnerNotes"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+  const statusBox=document.getElementById("refPartnerStatus");
+  if(statusBox){
+    statusBox.className="status";
+    statusBox.textContent="";
+  }
+}
+
+function fillReferralPartnerForm(partnerId){
+  const partner=referralPartnersCache.find(item=>item.id===partnerId);
+  if(!partner) return;
+  editingReferralPartnerId=partner.id;
+  document.getElementById("refPartnerName").value=partner.partner_name||"";
+  document.getElementById("refPartnerCode").value=partner.referral_code||"";
+  document.getElementById("refPartnerPhone").value=partner.phone||"";
+  document.getElementById("refPartnerEmail").value=partner.email||"";
+  document.getElementById("refPartnerNotes").value=partner.notes||"";
+}
+
+async function loadReferralPartners(){
+  const {data,error}=await sb.from("referral_partners").select("id,partner_name,referral_code,phone,email,notes,created_at").order("partner_name");
+  if(error){
+    status("refPartnerStatus",error.message,false);
+    return;
+  }
+  referralPartnersCache=(data||[]).map(item=>({
+    ...item,
+    referral_code:normalizeReferralCode(item.referral_code)
+  }));
+  renderReferralPartners();
+}
+
+function renderReferralPartners(){
+  const list=document.getElementById("referralPartnerList");
+  if(!list) return;
+  if(!referralPartnersCache.length){
+    list.innerHTML='<div class="muted">No referral partner created yet.</div>';
+    return;
+  }
+  list.innerHTML="";
+  referralPartnersCache.forEach(partner=>{
+    const card=document.createElement("div");
+    card.className="manage-card";
+    card.innerHTML=`
+      <strong>${partner.partner_name}</strong>
+      <div class="muted">Code: ${partner.referral_code}</div>
+      <div class="muted">${partner.phone || "No phone"}${partner.email ? ` · ${partner.email}` : ""}</div>
+      <div class="manage-card-actions">
+        <button class="secondary" type="button" onclick="fillReferralPartnerForm('${partner.id}')">Edit</button>
+        <button class="secondary" type="button" onclick="deleteReferralPartner('${partner.id}')">Delete</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+async function saveReferralPartner(){
+  try{
+    const partner_name=document.getElementById("refPartnerName").value.trim();
+    const referral_code=normalizeReferralCode(document.getElementById("refPartnerCode").value);
+    const phone=document.getElementById("refPartnerPhone").value.trim();
+    const email=document.getElementById("refPartnerEmail").value.trim();
+    const notes=document.getElementById("refPartnerNotes").value.trim();
+    if(!partner_name || !referral_code) throw new Error("Partner name and referral code are required.");
+
+    const payload={partner_name,referral_code,phone,email,notes};
+    let query;
+    if(editingReferralPartnerId){
+      query=sb.from("referral_partners").update(payload).eq("id",editingReferralPartnerId);
+    }else{
+      query=sb.from("referral_partners").insert(payload);
+    }
+    const {error}=await query;
+    if(error) throw error;
+
+    status("refPartnerStatus",editingReferralPartnerId?"Referral partner updated.":"Referral partner created.");
+    clearReferralPartnerForm();
+    await loadReferralPartners();
+    await renderReferralPartnerSalesSummary();
+  }catch(e){status("refPartnerStatus",e.message,false)}
+}
+
+async function deleteReferralPartner(partnerId){
+  const partner=referralPartnersCache.find(item=>item.id===partnerId);
+  if(!partner) return;
+  if(!confirm(`Delete referral partner ${partner.partner_name} (${partner.referral_code})?`)) return;
+  const {error}=await sb.from("referral_partners").delete().eq("id",partnerId);
+  if(error) return status("refPartnerStatus",error.message,false);
+  if(editingReferralPartnerId===partnerId) clearReferralPartnerForm();
+  await loadReferralPartners();
+  await renderReferralPartnerSalesSummary();
+}
+
+async function resolveReferralPartner(referralCode){
+  const cleanCode=normalizeReferralCode(referralCode);
+  if(!cleanCode) return null;
+  if(!referralPartnersCache.length) await loadReferralPartners();
+  const cached=referralPartnersCache.find(item=>normalizeReferralCode(item.referral_code)===cleanCode);
+  if(cached) return cached;
+  const {data,error}=await sb.from("referral_partners").select("id,partner_name,referral_code").eq("referral_code",cleanCode).maybeSingle();
+  if(error) throw error;
+  if(!data) throw new Error("Referral code not found. Ask admin to create this code first.");
+  return data;
+}
+
+async function renderReferralPartnerSalesSummary(){
+  const shell=document.getElementById("referralSalesSummary");
+  if(!shell) return;
+
+  const {data,error}=await sb
+    .from("stock_transactions")
+    .select("id,quantity,party,phone,email,address,order_id,order_type,payment_method,referral_code,created_at")
+    .eq("transaction_type","OUT")
+    .order("created_at",{ascending:false});
+  if(error){
+    shell.innerHTML=`<div class="muted">${error.message}</div>`;
+    return;
+  }
+
+  const grouped=new Map();
+  (data||[]).forEach(tx=>{
+    const code=normalizeReferralCode(tx.referral_code) || "NO-CODE";
+    const summary=grouped.get(code) || {
+      code,
+      partnerName:(referralPartnersCache.find(item=>normalizeReferralCode(item.referral_code)===code)?.partner_name)||"Unassigned",
+      totalArticles:0,
+      orderIds:new Set(),
+      orderTypeCounts:{},
+      latestCustomer:null,
+      latestDate:0
+    };
+    summary.totalArticles+=Number(tx.quantity||0);
+    summary.orderIds.add(tx.order_id || tx.id);
+    const type=(tx.order_type||"Unknown").trim()||"Unknown";
+    summary.orderTypeCounts[type]=(summary.orderTypeCounts[type]||0)+1;
+    const txDate=Date.parse(tx.created_at||"")||0;
+    if(txDate>summary.latestDate){
+      summary.latestDate=txDate;
+      summary.latestCustomer={
+        name:tx.party||"Walk-in Customer",
+        phone:tx.phone||"-",
+        email:tx.email||"-",
+        address:tx.address||"-",
+        payment_method:tx.payment_method||"-"
+      };
+    }
+    grouped.set(code,summary);
+  });
+
+  const rows=Array.from(grouped.values()).sort((a,b)=>b.totalArticles-a.totalArticles);
+  if(!rows.length){
+    shell.innerHTML='<div class="muted">No referral-based sales yet.</div>';
+    return;
+  }
+
+  shell.innerHTML="";
+  rows.forEach(row=>{
+    const uniqueOrders=row.orderIds instanceof Set ? row.orderIds.size : 0;
+    const typeBadges=Object.entries(row.orderTypeCounts).map(([type,count])=>`<span class="customer-article-badge">${type}: ${count}</span>`).join("");
+    const latest=row.latestCustomer||{};
+    const card=document.createElement("div");
+    card.className="ref-summary-card";
+    card.innerHTML=`
+      <strong>${row.partnerName}</strong>
+      <div class="muted">Referral Code: ${row.code}</div>
+      <div class="muted">Articles sold: ${row.totalArticles} · Orders: ${uniqueOrders}</div>
+      <div class="ref-summary-badges">${typeBadges || '<span class="customer-article-badge">No order type data</span>'}</div>
+      <div class="muted" style="margin-top:7px">Latest customer: ${latest.name || "-"}</div>
+      <div class="muted">Phone: ${latest.phone || "-"} · Email: ${latest.email || "-"}</div>
+      <div class="muted">Payment: ${latest.payment_method || "-"}</div>
+      <div class="muted">Address: ${latest.address || "-"}</div>
+    `;
+    shell.appendChild(card);
+  });
+}
+
 async function handleQuickMenuAction(action){
   if(action==="article-types"){
     selectedArticleType="ALL";
@@ -1700,6 +2099,9 @@ async function handleQuickMenuAction(action){
     clearManageForm();
     await showTab("manageArticles");
     renderManageArticles();
+  }
+  if(action==="referral-partners"){
+    await showTab("referralPartners");
   }
   if(action==="manage-customers"){
     editingCustomerKey="";
@@ -1734,6 +2136,8 @@ async function handleQuickMenuAction(action){
 function toggleTransactionCustomerFields(){
   const isStockOut=document.getElementById("txType")?.value==="OUT";
   const box=document.getElementById("customerDeliveryFields");
+  const txOrderFields=document.getElementById("txOrderFields");
+  const txReferralFields=document.getElementById("txReferralFields");
   const qtyWrap=document.getElementById("txQtyWrap");
   const qtyInput=document.getElementById("txQty");
   const txProduct=document.getElementById("txProduct");
@@ -1747,6 +2151,8 @@ function toggleTransactionCustomerFields(){
   const bulkAddRowBtn=document.getElementById("bulkAddRowBtn");
   const bulkAddAllBtn=document.getElementById("bulkAddAllBtn");
   if(box) box.classList.toggle("hidden",!isStockOut);
+  if(txOrderFields) txOrderFields.classList.toggle("hidden",!isStockOut);
+  if(txReferralFields) txReferralFields.classList.toggle("hidden",!isStockOut);
   if(qtyWrap) qtyWrap.classList.toggle("hidden",isStockOut);
   if(qtyInput && isStockOut) qtyInput.value=1;
   if(txProduct) txProduct.classList.toggle("hidden",isStockOut);
@@ -1948,10 +2354,16 @@ function clearTransactionOrder(showMessage=false){
 }
 
 function resetTransactionFormAfterSave(){
-  ["txParty","txReference","txPhone","txEmail","txAddress","txNotes"].forEach((id)=>{
+  ["txParty","txReference","txPhone","txEmail","txAddress","txCity","txPostal","txNotes","txReferralCode"].forEach((id)=>{
     const el=document.getElementById(id);
     if(el) el.value="";
   });
+  const txOrderType=document.getElementById("txOrderType");
+  const txPaymentMethod=document.getElementById("txPaymentMethod");
+  const txPaymentStatus=document.getElementById("txPaymentStatus");
+  if(txOrderType) txOrderType.value="Online";
+  if(txPaymentMethod) txPaymentMethod.value="Cash on Delivery";
+  if(txPaymentStatus) txPaymentStatus.value="Pending";
   const txQty=document.getElementById("txQty");
   if(txQty) txQty.value="";
   const txPrice=document.getElementById("txPrice");
@@ -2033,6 +2445,8 @@ function prefillDeliveryFromTransaction(tx,product){
   const phoneInput=document.getElementById("dlPhone");
   const emailInput=document.getElementById("dlEmail");
   const addressInput=document.getElementById("dlAddress");
+  const cityInput=document.getElementById("dlCity");
+  const postalInput=document.getElementById("dlPostal");
   const itemsInput=document.getElementById("dlItems");
   const notesInput=document.getElementById("dlNotes");
 
@@ -2042,6 +2456,8 @@ function prefillDeliveryFromTransaction(tx,product){
   if(phoneInput) phoneInput.value=tx.phone||"";
   if(emailInput) emailInput.value=tx.email||"";
   if(addressInput) addressInput.value=tx.address||"";
+  if(cityInput) cityInput.value=tx.city||"";
+  if(postalInput) postalInput.value=tx.postal_code||"";
   if(itemsInput) itemsInput.value=itemSummary;
   if(notesInput) notesInput.value=tx.notes||"";
 
@@ -2089,6 +2505,197 @@ function clearDeliveryForm(){
 function printDeliveryLabel(){
   updateDeliveryLabel();
   window.print();
+}
+
+function openCustomerPortal(){
+  document.getElementById("authCard").classList.add("hidden");
+  document.getElementById("customerPortal").classList.remove("hidden");
+  loadCustomerPortalInventory();
+}
+
+function closeCustomerPortal(){
+  document.getElementById("customerPortal").classList.add("hidden");
+  document.getElementById("authCard").classList.remove("hidden");
+}
+
+async function loadCustomerPortalInventory(){
+  const {data,error}=await sb
+    .from("products")
+    .select("id,sku,name,category,colour,size_details,article_details,selling_price,image_url")
+    .order("name");
+  if(error) return status("portalStatus",error.message,false);
+  portalInventoryCache=(data||[]).map(item=>({
+    ...item,
+    size_stock:normalizeSizeStock(item.size_details||item.article_details)
+  }));
+  renderCustomerPortalProducts();
+}
+
+function renderCustomerPortalProducts(){
+  const list=document.getElementById("portalInventoryList");
+  if(!list) return;
+  const query=(document.getElementById("portalSearch")?.value||"").trim().toLowerCase();
+  const filtered=portalInventoryCache.filter(product=>{
+    if(!query) return true;
+    const haystack=[product.name,product.sku,product.category,product.colour].join(" ").toLowerCase();
+    return haystack.includes(query);
+  });
+
+  list.innerHTML="";
+  if(!filtered.length){
+    list.innerHTML='<div class="muted">No products match your search.</div>';
+    return;
+  }
+
+  filtered.forEach(product=>{
+    const sizeOptions=Object.entries(product.size_stock||{}).filter(([,qty])=>Number(qty||0)>0);
+    const sizeHtml=sizeOptions.map(([size,qty])=>`<option value="${size}">${size} (${qty} available)</option>`).join("");
+    const productId=product.id;
+    const card=document.createElement("div");
+    card.className="portal-product-card";
+    card.innerHTML=`
+      <div class="portal-product-top">
+        <img src="${product.image_url || ""}" alt="${product.name}">
+        <div>
+          <strong>${product.name}</strong>
+          <div class="muted">${product.sku} · ${normalizeArticleType(product.category)}</div>
+          <div class="muted">Price: ${Number(product.selling_price||0).toFixed(2)}</div>
+        </div>
+      </div>
+      <div class="portal-product-form">
+        <div>
+          <label>Size</label>
+          <select id="portalSize-${productId}">${sizeHtml || '<option value="">Out of stock</option>'}</select>
+        </div>
+        <div>
+          <label>Qty</label>
+          <input id="portalQty-${productId}" type="number" min="1" value="1">
+        </div>
+        <button class="primary" type="button" onclick="addPortalItem('${productId}')">Add</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function addPortalItem(productId){
+  const product=portalInventoryCache.find(item=>item.id===productId);
+  if(!product) return;
+  const size=document.getElementById(`portalSize-${productId}`)?.value;
+  const qty=Math.max(1,Number(document.getElementById(`portalQty-${productId}`)?.value||1));
+  if(!size) return status("portalStatus","This product is out of stock.",false);
+  const available=Number(product.size_stock?.[size]||0);
+  const inCart=portalCartItems.filter(item=>item.product_id===productId && item.size===size).reduce((sum,item)=>sum+item.quantity,0);
+  if(qty+inCart>available){
+    return status("portalStatus",`Only ${available} item(s) available for ${product.name} size ${size}.`,false);
+  }
+
+  portalCartItems.push({
+    product_id:product.id,
+    sku:product.sku,
+    name:product.name,
+    size,
+    quantity:qty,
+    unit_price:Number(product.selling_price||0)
+  });
+  renderPortalCart();
+  status("portalStatus",`${product.name} added to order.`);
+}
+
+function removePortalItem(index){
+  portalCartItems=portalCartItems.filter((_,i)=>i!==index);
+  renderPortalCart();
+}
+
+function renderPortalCart(){
+  const box=document.getElementById("portalCartItems");
+  const meta=document.getElementById("portalCartMeta");
+  if(!box || !meta) return;
+  if(!portalCartItems.length){
+    box.innerHTML="";
+    meta.textContent="No items selected yet.";
+    return;
+  }
+  const totalQty=portalCartItems.reduce((sum,item)=>sum+Number(item.quantity||0),0);
+  meta.textContent=`${portalCartItems.length} line item(s) · Total articles ${totalQty}`;
+  box.innerHTML="";
+  portalCartItems.forEach((item,index)=>{
+    const row=document.createElement("div");
+    row.className="order-cart-row";
+    row.innerHTML=`
+      <div>
+        <div class="order-cart-line">${item.name} (${item.sku})</div>
+        <div class="order-cart-sub">Size ${item.size} · Qty ${item.quantity} · ${Number(item.unit_price||0).toFixed(2)}</div>
+      </div>
+      <button type="button" onclick="removePortalItem(${index})">Remove</button>
+    `;
+    box.appendChild(row);
+  });
+}
+
+function clearPortalOrderForm(){
+  portalCartItems=[];
+  renderPortalCart();
+  ["portalName","portalPhone","portalEmail","portalAddress","portalCity","portalPostal","portalReferralCode","portalReference","portalNotes"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+  const orderType=document.getElementById("portalOrderType");
+  const payment=document.getElementById("portalPaymentMethod");
+  if(orderType) orderType.value="Online";
+  if(payment) payment.value="Cash on Delivery";
+}
+
+async function submitCustomerPortalOrder(){
+  try{
+    if(!portalCartItems.length) throw new Error("Select at least one product to place order.");
+    const party=document.getElementById("portalName").value.trim();
+    const phone=document.getElementById("portalPhone").value.trim();
+    const email=document.getElementById("portalEmail").value.trim();
+    const address=document.getElementById("portalAddress").value.trim();
+    const city=document.getElementById("portalCity").value.trim();
+    const postal_code=document.getElementById("portalPostal").value.trim();
+    const order_type=document.getElementById("portalOrderType").value;
+    const payment_method=document.getElementById("portalPaymentMethod").value;
+    const payment_status="Pending";
+    const notes=document.getElementById("portalNotes").value.trim();
+    const reference=document.getElementById("portalReference").value.trim();
+    const referral_code=normalizeReferralCode(document.getElementById("portalReferralCode").value);
+    if(!party || !phone || !address) throw new Error("Name, phone, and address are required.");
+
+    const referralPartner=await resolveReferralPartner(referral_code);
+    const order_id=generateOrderId("WEB");
+
+    const rows=portalCartItems.map(item=>({
+      product_id:item.product_id,
+      size:item.size,
+      transaction_type:"OUT",
+      quantity:Number(item.quantity||0),
+      unit_price:Number(item.unit_price||0),
+      party,
+      reference:reference || order_id,
+      notes,
+      phone,
+      email,
+      address,
+      city,
+      postal_code,
+      order_id,
+      order_type,
+      payment_method,
+      payment_status,
+      referral_code:referral_code||null,
+      referral_partner_id:referralPartner?.id || null
+    }));
+
+    const {error}=await sb.from("stock_transactions").insert(rows);
+    if(error) throw error;
+    await applyTransactionRowsToProducts(rows);
+    await loadCustomerPortalInventory();
+
+    status("portalStatus",`Order placed successfully. Your order number is ${order_id}.`);
+    clearPortalOrderForm();
+  }catch(e){status("portalStatus",e.message,false)}
 }
 
 
@@ -2540,6 +3147,14 @@ async function saveTransaction(){
     const customerPhone=document.getElementById("txPhone")?.value.trim()||"";
     const customerEmail=document.getElementById("txEmail")?.value.trim()||"";
     const customerAddress=document.getElementById("txAddress")?.value.trim()||"";
+    const customerCity=document.getElementById("txCity")?.value.trim()||"";
+    const customerPostal=document.getElementById("txPostal")?.value.trim()||"";
+    const orderType=document.getElementById("txOrderType")?.value||"Online";
+    const paymentMethod=document.getElementById("txPaymentMethod")?.value||"Cash on Delivery";
+    const paymentStatus=document.getElementById("txPaymentStatus")?.value||"Pending";
+    const referralCode=normalizeReferralCode(document.getElementById("txReferralCode")?.value||"");
+    const referralPartner=await resolveReferralPartner(referralCode);
+    const orderId=generateOrderId("ADM");
     if(txType==='OUT' && (!customerName || !customerPhone || !customerAddress)){
       throw new Error("For Stock Out, add customer name, phone, and address.");
     }
@@ -2557,7 +3172,15 @@ async function saveTransaction(){
       notes:item.notes||"",
       phone:customerPhone,
       email:customerEmail,
-      address:customerAddress
+      address:customerAddress,
+      city:customerCity,
+      postal_code:customerPostal,
+      order_id:txType==='OUT' ? orderId : null,
+      order_type:txType==='OUT' ? orderType : null,
+      payment_method:txType==='OUT' ? paymentMethod : null,
+      payment_status:txType==='OUT' ? paymentStatus : null,
+      referral_code:txType==='OUT' ? (referralCode||null) : null,
+      referral_partner_id:txType==='OUT' ? (referralPartner?.id || null) : null
     }));
 
     const {error}=await sb.from("stock_transactions").insert(rows);
@@ -2579,7 +3202,9 @@ async function saveTransaction(){
         notes:transactionOrderItems.map(item=>item.notes).filter(Boolean).join(" | "),
         phone:customerPhone,
         email:customerEmail,
-        address:customerAddress
+        address:customerAddress,
+        city:customerCity,
+        postal_code:customerPostal
       },{name:itemSummary});
     }
 
@@ -2615,7 +3240,14 @@ function normalizeCustomerValue(value,fallback){
 }
 
 function buildCustomerKey(tx){
-  return [normalizeCustomerValue(tx.party,"Walk-in Customer"), tx.phone||"", tx.email||"", tx.address||""].join("|||");
+  return [
+    normalizeCustomerValue(tx.party,"Walk-in Customer"),
+    tx.phone||"",
+    tx.email||"",
+    tx.address||"",
+    tx.city||"",
+    tx.postal_code||""
+  ].join("|||");
 }
 
 function customerMatchesSearch(customer, query){
@@ -2631,7 +3263,10 @@ function customerMatchesSearch(customer, query){
       item.category,
       item.size,
       item.reference,
-      item.notes
+      item.notes,
+      item.order_type,
+      item.payment_method,
+      item.referral_code
     ].join(" ")).join(" ")
   ].join(" ").toLowerCase();
   return haystack.includes(query);
@@ -2732,7 +3367,7 @@ function getCustomerItemImage(product){
 }
 
 async function loadCustomers(){
-  const txQuery=sb.from("stock_transactions").select("id,product_id,size,transaction_type,quantity,party,reference,notes,phone,email,address,created_at").eq("transaction_type","OUT").order("created_at",{ascending:false});
+  const txQuery=sb.from("stock_transactions").select("id,product_id,size,transaction_type,quantity,party,reference,notes,phone,email,address,city,postal_code,order_type,payment_method,payment_status,referral_code,created_at").eq("transaction_type","OUT").order("created_at",{ascending:false});
   const prodQuery=sb.from("products").select("id,sku,name,category,colour,size,article_details,size_details,opening_stock,cost_price,selling_price,reorder_level,image_url,gallery_images");
   const [txRes, prodRes] = await Promise.all([txQuery, prodQuery]);
   if(txRes.error || prodRes.error) return;
@@ -2753,6 +3388,8 @@ async function loadCustomers(){
       phone:tx.phone||"",
       email:tx.email||"",
       address:tx.address||"",
+      city:tx.city||"",
+      postal_code:tx.postal_code||"",
       firstSeen:tx.created_at,
       lastSeen:tx.created_at,
       items:[],
@@ -2777,6 +3414,12 @@ async function loadCustomers(){
       category:product.category||"",
       notes:tx.notes||"",
       reference:tx.reference||""
+      ,order_type:tx.order_type||""
+      ,payment_method:tx.payment_method||""
+      ,payment_status:tx.payment_status||""
+      ,referral_code:normalizeReferralCode(tx.referral_code||"")
+      ,city:tx.city||""
+      ,postal_code:tx.postal_code||""
     });
     grouped.set(key,current);
   });
@@ -2863,7 +3506,8 @@ function renderCustomers(){
   document.getElementById("customerDetailName").textContent=selected.name;
   document.getElementById("customerDetailPhone").textContent=`Phone: ${selected.phone || "-"}`;
   document.getElementById("customerDetailEmail").textContent=`Email: ${selected.email || "-"}`;
-  document.getElementById("customerDetailAddress").textContent=`Address: ${selected.address || "-"}`;
+  const fullAddress=[selected.address, [selected.city,selected.postal_code].filter(Boolean).join(", ")].filter(Boolean).join(" | ");
+  document.getElementById("customerDetailAddress").textContent=`Address: ${fullAddress || "-"}`;
   document.getElementById("customerDetailCount").textContent=`Total articles: ${selected.totalQty}`;
   document.getElementById("customerDetailOrders").textContent=`Transactions: ${selected.totalTransactions || selected.items.length}`;
   document.getElementById("customerDetailLast").textContent=`Last seen: ${new Date(selected.lastSeen).toLocaleString()}`;
@@ -2885,6 +3529,9 @@ function renderCustomers(){
           ${item.sku ? `<span class="customer-article-badge">SKU: ${item.sku}</span>` : ""}
           <span class="customer-article-badge">${normalizeArticleType(item.category)}</span>
           <span class="customer-article-badge">Size ${item.size || "-"}</span>
+          ${item.order_type ? `<span class="customer-article-badge">Order: ${item.order_type}</span>` : ""}
+          ${item.payment_method ? `<span class="customer-article-badge">Payment: ${item.payment_method}</span>` : ""}
+          ${item.referral_code ? `<span class="customer-article-badge">Referral: ${item.referral_code}</span>` : ""}
         </div>
         <div class="muted">Articles bought: ${item.quantity}</div>
         <div class="muted">Date: ${new Date(item.created_at).toLocaleString()}</div>
@@ -2970,7 +3617,7 @@ if("serviceWorker" in navigator){
     location.reload();
   });
 
-  navigator.serviceWorker.register("service-worker.js?v=11").then((registration)=>{
+  navigator.serviceWorker.register("service-worker.js?v=12").then((registration)=>{
     registration.update();
 
     if(registration.waiting){

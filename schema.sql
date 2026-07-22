@@ -31,6 +31,24 @@ create table if not exists stock_transactions (
   phone text,
   email text,
   address text,
+  city text,
+  postal_code text,
+  order_id text,
+  order_type text,
+  payment_method text,
+  payment_status text,
+  referral_code text,
+  referral_partner_id uuid,
+  created_at timestamptz default now()
+);
+
+create table if not exists referral_partners (
+  id uuid primary key default uuid_generate_v4(),
+  partner_name text not null,
+  referral_code text unique not null,
+  phone text,
+  email text,
+  notes text,
   created_at timestamptz default now()
 );
 
@@ -60,7 +78,22 @@ alter table stock_transactions add column if not exists notes text;
 alter table stock_transactions add column if not exists phone text;
 alter table stock_transactions add column if not exists email text;
 alter table stock_transactions add column if not exists address text;
+alter table stock_transactions add column if not exists city text;
+alter table stock_transactions add column if not exists postal_code text;
+alter table stock_transactions add column if not exists order_id text;
+alter table stock_transactions add column if not exists order_type text;
+alter table stock_transactions add column if not exists payment_method text;
+alter table stock_transactions add column if not exists payment_status text;
+alter table stock_transactions add column if not exists referral_code text;
+alter table stock_transactions add column if not exists referral_partner_id uuid;
 alter table stock_transactions add column if not exists created_at timestamptz default now();
+
+alter table referral_partners add column if not exists partner_name text;
+alter table referral_partners add column if not exists referral_code text;
+alter table referral_partners add column if not exists phone text;
+alter table referral_partners add column if not exists email text;
+alter table referral_partners add column if not exists notes text;
+alter table referral_partners add column if not exists created_at timestamptz default now();
 
 do $$
 begin
@@ -75,8 +108,22 @@ begin
   end if;
 end $$;
 
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'stock_transactions_referral_partner_id_fkey'
+  ) then
+    alter table stock_transactions
+      add constraint stock_transactions_referral_partner_id_fkey
+      foreign key (referral_partner_id) references referral_partners(id) on delete set null;
+  end if;
+end $$;
+
 alter table products enable row level security;
 alter table stock_transactions enable row level security;
+alter table referral_partners enable row level security;
 
 do $$
 begin
@@ -126,5 +173,29 @@ begin
     select 1 from pg_policies where schemaname = 'public' and tablename = 'stock_transactions' and policyname = 'transactions_delete'
   ) then
     create policy transactions_delete on stock_transactions for delete using (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'referral_partners' and policyname = 'referral_partners_select'
+  ) then
+    create policy referral_partners_select on referral_partners for select using (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'referral_partners' and policyname = 'referral_partners_insert'
+  ) then
+    create policy referral_partners_insert on referral_partners for insert with check (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'referral_partners' and policyname = 'referral_partners_update'
+  ) then
+    create policy referral_partners_update on referral_partners for update using (true) with check (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'referral_partners' and policyname = 'referral_partners_delete'
+  ) then
+    create policy referral_partners_delete on referral_partners for delete using (true);
   end if;
 end $$;
