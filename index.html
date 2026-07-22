@@ -1747,6 +1747,8 @@ let referralPartnersCache=[];
 let editingReferralPartnerId=null;
 let portalInventoryCache=[];
 let portalCartItems=[];
+let referralFeatureEnabled=true;
+let extendedOrderSchemaAvailable=true;
 
 function getAuthRedirectUrl(){
   return `${location.origin}${location.pathname}`;
@@ -1774,6 +1776,51 @@ function status(id,msg,ok=true){
   const el=document.getElementById(id);
   el.className="status "+(ok?"ok":"bad");
   el.textContent=msg;
+}
+
+function messageFromError(error){
+  return String(error?.message || error?.error_description || "").toLowerCase();
+}
+
+function isMissingReferralTableError(error){
+  const msg=messageFromError(error);
+  return msg.includes("public.referral_partners")
+    || msg.includes("relation \"referral_partners\" does not exist")
+    || msg.includes("table \"referral_partners\" does not exist")
+    || msg.includes("schema cache");
+}
+
+function isMissingStockColumnError(error){
+  const msg=messageFromError(error);
+  if(!(msg.includes("stock_transactions") || msg.includes("column"))) return false;
+  return msg.includes("does not exist") || msg.includes("schema cache");
+}
+
+function toLegacyTransactionRows(rows){
+  return (rows||[]).map(row=>({
+    product_id:row.product_id,
+    size:row.size,
+    transaction_type:row.transaction_type,
+    quantity:row.quantity,
+    unit_price:Number(row.unit_price||0),
+    party:row.party||"",
+    reference:row.reference||"",
+    notes:row.notes||"",
+    phone:row.phone||"",
+    email:row.email||"",
+    address:row.address||""
+  }));
+}
+
+async function insertStockTransactionsWithFallback(rows){
+  const {error}=await sb.from("stock_transactions").insert(rows);
+  if(!error) return {usedLegacySchema:false};
+  if(!isMissingStockColumnError(error)) throw error;
+
+  extendedOrderSchemaAvailable=false;
+  const {error:legacyError}=await sb.from("stock_transactions").insert(toLegacyTransactionRows(rows));
+  if(legacyError) throw legacyError;
+  return {usedLegacySchema:true};
 }
 
 function toFriendlyAuthError(error,context){
@@ -1933,9 +1980,18 @@ function fillReferralPartnerForm(partnerId){
 async function loadReferralPartners(){
   const {data,error}=await sb.from("referral_partners").select("id,partner_name,referral_code,phone,email,notes,created_at").order("partner_name");
   if(error){
+    if(isMissingReferralTableError(error)){
+      referralFeatureEnabled=false;
+      referralPartnersCache=[];
+      renderReferralPartners();
+      const summary=document.getElementById("referralSalesSummary");
+      if(summary) summary.innerHTML='<div class="muted">Referral tracking is disabled until you run the updated schema.sql in Supabase.</div>';
+      return;
+    }
     status("refPartnerStatus",error.message,false);
     return;
   }
+  referralFeatureEnabled=true;
   referralPartnersCache=(data||[]).map(item=>({
     ...item,
     referral_code:normalizeReferralCode(item.referral_code)
@@ -1946,6 +2002,10 @@ async function loadReferralPartners(){
 function renderReferralPartners(){
   const list=document.getElementById("referralPartnerList");
   if(!list) return;
+  if(!referralFeatureEnabled){
+    list.innerHTML='<div class="muted">Referral table not found. Run schema.sql in Supabase to enable this feature.</div>';
+    return;
+  }
   if(!referralPartnersCache.length){
     list.innerHTML='<div class="muted">No referral partner created yet.</div>';
     return;
@@ -1969,6 +2029,7 @@ function renderReferralPartners(){
 
 async function saveReferralPartner(){
   try{
+    if(!referralFeatureEnabled) throw new Error("Referral feature is not enabled in database yet. Run schema.sql first.");
     const partner_name=document.getElementById("refPartnerName").value.trim();
     const referral_code=normalizeReferralCode(document.getElementById("refPartnerCode").value);
     const phone=document.getElementById("refPartnerPhone").value.trim();
@@ -1994,6 +2055,7 @@ async function saveReferralPartner(){
 }
 
 async function deleteReferralPartner(partnerId){
+  if(!referralFeatureEnabled) return status("refPartnerStatus","Referral feature is not enabled in database yet. Run schema.sql first.",false);
   const partner=referralPartnersCache.find(item=>item.id===partnerId);
   if(!partner) return;
   if(!confirm(`Delete referral partner ${partner.partner_name} (${partner.referral_code})?`)) return;
@@ -2007,11 +2069,19 @@ async function deleteReferralPartner(partnerId){
 async function resolveReferralPartner(referralCode){
   const cleanCode=normalizeReferralCode(referralCode);
   if(!cleanCode) return null;
+  if(!referralFeatureEnabled) return null;
   if(!referralPartnersCache.length) await loadReferralPartners();
+  if(!referralFeatureEnabled) return null;
   const cached=referralPartnersCache.find(item=>normalizeReferralCode(item.referral_code)===cleanCode);
   if(cached) return cached;
   const {data,error}=await sb.from("referral_partners").select("id,partner_name,referral_code").eq("referral_code",cleanCode).maybeSingle();
-  if(error) throw error;
+  if(error){
+    if(isMissingReferralTableError(error)){
+      referralFeatureEnabled=false;
+      return null;
+    }
+    throw error;
+  }
   if(!data) throw new Error("Referral code not found. Ask admin to create this code first.");
   return data;
 }
@@ -2019,6 +2089,10 @@ async function resolveReferralPartner(referralCode){
 async function renderReferralPartnerSalesSummary(){
   const shell=document.getElementById("referralSalesSummary");
   if(!shell) return;
+  if(!referralFeatureEnabled){
+    shell.innerHTML='<div class="muted">Referral tracking is disabled until schema.sql is applied in Supabase.</div>';
+    return;
+  }
 
   const {data,error}=await sb
     .from("stock_transactions")
@@ -2026,6 +2100,10 @@ async function renderReferralPartnerSalesSummary(){
     .eq("transaction_type","OUT")
     .order("created_at",{ascending:false});
   if(error){
+    if(isMissingStockColumnError(error) || isMissingReferralTableError(error)){
+      shell.innerHTML='<div class="muted">Order/referral analytics require updated schema.sql in Supabase.</div>';
+      return;
+    }
     shell.innerHTML=`<div class="muted">${error.message}</div>`;
     return;
   }
@@ -2688,12 +2766,13 @@ async function submitCustomerPortalOrder(){
       referral_partner_id:referralPartner?.id || null
     }));
 
-    const {error}=await sb.from("stock_transactions").insert(rows);
-    if(error) throw error;
+    const insertResult=await insertStockTransactionsWithFallback(rows);
     await applyTransactionRowsToProducts(rows);
     await loadCustomerPortalInventory();
 
-    status("portalStatus",`Order placed successfully. Your order number is ${order_id}.`);
+    status("portalStatus",insertResult.usedLegacySchema
+      ? `Order placed successfully (${order_id}). Run schema.sql in Supabase to enable full referral/order analytics.`
+      : `Order placed successfully. Your order number is ${order_id}.`);
     clearPortalOrderForm();
   }catch(e){status("portalStatus",e.message,false)}
 }
@@ -3183,12 +3262,16 @@ async function saveTransaction(){
       referral_partner_id:txType==='OUT' ? (referralPartner?.id || null) : null
     }));
 
-    const {error}=await sb.from("stock_transactions").insert(rows);
-    if(error) throw error;
+    const insertResult=await insertStockTransactionsWithFallback(rows);
 
     await applyTransactionRowsToProducts(rows);
 
-    status("txStatus",txType==='OUT' ? `Stock Out order saved (${rows.length} item${rows.length===1?"":"s"}). Delivery label is ready to print.` : `Stock In order saved (${rows.length} item${rows.length===1?"":"s"}).`);
+    const successMessage=txType==='OUT'
+      ? `Stock Out order saved (${rows.length} item${rows.length===1?"":"s"}). Delivery label is ready to print.`
+      : `Stock In order saved (${rows.length} item${rows.length===1?"":"s"}).`;
+    status("txStatus",insertResult.usedLegacySchema
+      ? `${successMessage} Run schema.sql in Supabase to enable full referral/order analytics.`
+      : successMessage);
     if(txType==='OUT'){
       const productById=productsCache.reduce((acc,item)=>{acc[item.id]=item;return acc;},{});
       const itemSummary=transactionOrderItems
@@ -3367,9 +3450,25 @@ function getCustomerItemImage(product){
 }
 
 async function loadCustomers(){
-  const txQuery=sb.from("stock_transactions").select("id,product_id,size,transaction_type,quantity,party,reference,notes,phone,email,address,city,postal_code,order_type,payment_method,payment_status,referral_code,created_at").eq("transaction_type","OUT").order("created_at",{ascending:false});
   const prodQuery=sb.from("products").select("id,sku,name,category,colour,size,article_details,size_details,opening_stock,cost_price,selling_price,reorder_level,image_url,gallery_images");
-  const [txRes, prodRes] = await Promise.all([txQuery, prodQuery]);
+  const txModernQuery=sb
+    .from("stock_transactions")
+    .select("id,product_id,size,transaction_type,quantity,party,reference,notes,phone,email,address,city,postal_code,order_type,payment_method,payment_status,referral_code,created_at")
+    .eq("transaction_type","OUT")
+    .order("created_at",{ascending:false});
+
+  let txRes=await txModernQuery;
+  const prodRes=await prodQuery;
+
+  if(txRes.error && isMissingStockColumnError(txRes.error)){
+    extendedOrderSchemaAvailable=false;
+    txRes=await sb
+      .from("stock_transactions")
+      .select("id,product_id,size,transaction_type,quantity,party,reference,notes,phone,email,address,created_at")
+      .eq("transaction_type","OUT")
+      .order("created_at",{ascending:false});
+  }
+
   if(txRes.error || prodRes.error) return;
 
   const productsById=(prodRes.data||[]).reduce((map,product)=>{
