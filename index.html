@@ -1315,10 +1315,9 @@
           <div>
             <label>Payment Method (Free Setup)</label>
             <select id="portalPaymentMethod">
-              <option value="Cash on Delivery">Cash on Delivery</option>
-              <option value="Manual Bank Transfer">Manual Bank Transfer</option>
-              <option value="EasyPaisa/JazzCash">EasyPaisa/JazzCash</option>
+              <option value="Email Transfer">Email Transfer</option>
             </select>
+            <div class="delivery-hint">Pay via email transfer to <strong>kj@sufithread.com</strong> and share payment screenshot on WhatsApp <strong>6046575454</strong>.</div>
           </div>
         </div>
         <div class="grid">
@@ -1423,9 +1422,7 @@
         <div>
           <label>Payment Method (Free Setup)</label>
           <select id="txPaymentMethod">
-            <option value="Cash on Delivery">Cash on Delivery</option>
-            <option value="Manual Bank Transfer">Manual Bank Transfer</option>
-            <option value="EasyPaisa/JazzCash">EasyPaisa/JazzCash</option>
+            <option value="Email Transfer">Email Transfer</option>
           </select>
         </div>
       </div>
@@ -2525,7 +2522,7 @@ function resetTransactionFormAfterSave(){
   const txPaymentMethod=document.getElementById("txPaymentMethod");
   const txPaymentStatus=document.getElementById("txPaymentStatus");
   if(txOrderType) txOrderType.value="Online";
-  if(txPaymentMethod) txPaymentMethod.value="Cash on Delivery";
+  if(txPaymentMethod) txPaymentMethod.value="Email Transfer";
   if(txPaymentStatus) txPaymentStatus.value="Pending";
   const txQty=document.getElementById("txQty");
   if(txQty) txQty.value="";
@@ -2815,7 +2812,7 @@ function clearPortalOrderForm(){
   const orderType=document.getElementById("portalOrderType");
   const payment=document.getElementById("portalPaymentMethod");
   if(orderType) orderType.value="Online";
-  if(payment) payment.value="Cash on Delivery";
+  if(payment) payment.value="Email Transfer";
 }
 
 async function submitCustomerPortalOrder(){
@@ -3323,7 +3320,7 @@ async function saveTransaction(){
     const customerCity=document.getElementById("txCity")?.value.trim()||"";
     const customerPostal=document.getElementById("txPostal")?.value.trim()||"";
     const orderType=document.getElementById("txOrderType")?.value||"Online";
-    const paymentMethod=document.getElementById("txPaymentMethod")?.value||"Cash on Delivery";
+    const paymentMethod=document.getElementById("txPaymentMethod")?.value||"Email Transfer";
     const paymentStatus=document.getElementById("txPaymentStatus")?.value||"Pending";
     const referralCode=normalizeReferralCode(document.getElementById("txReferralCode")?.value||"");
     const referralPartner=await resolveReferralPartner(referralCode);
