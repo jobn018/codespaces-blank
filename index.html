@@ -1265,7 +1265,7 @@
     <img src="sufi-thread-logo.png" alt="Sufi Thread logo" style="display:block;width:150px;height:150px;object-fit:contain;margin:0 auto 12px;border-radius:18px;">
     <h2>Administrator Login</h2>
     <label>Email</label>
-    <input id="email" type="email" value="kj@sufithread.com">
+    <input id="email" type="email" placeholder="Admin email">
     <label>Password</label>
     <input id="password" type="password" placeholder="Create or enter your password">
     <button class="primary" onclick="signIn()">Sign In</button>
@@ -1326,7 +1326,7 @@
           <div><label>Order Reference</label><input id="portalReference" placeholder="Optional reference"></div>
         </div>
         <label>Order Notes</label><textarea id="portalNotes" placeholder="Any notes for this order"></textarea>
-        <div class="grid">
+        <div id="portalBackRow" class="grid">
           <div><button class="secondary" type="button" onclick="closeCustomerPortal()">Back To Admin Login</button></div>
           <div><button class="primary" type="button" onclick="submitCustomerPortalOrder()">Place Order</button></div>
         </div>
@@ -1749,9 +1749,28 @@ let portalInventoryCache=[];
 let portalCartItems=[];
 let referralFeatureEnabled=true;
 let extendedOrderSchemaAvailable=true;
+let isPublicStoreMode=false;
 
 function getAuthRedirectUrl(){
   return `${location.origin}${location.pathname}`;
+}
+
+function shouldOpenCustomerPortalFromUrl(){
+  const url=new URL(location.href);
+  const hash=(location.hash||"").toLowerCase();
+  if(url.searchParams.get("shop")==="1") return true;
+  if(hash==="#shop" || hash==="#store") return true;
+  return false;
+}
+
+function handleInitialPortalRoute(){
+  if(isRecoveryMode) return;
+  if(shouldOpenCustomerPortalFromUrl()) openCustomerPortal(true);
+}
+
+function applyPortalMode(){
+  const backRow=document.getElementById("portalBackRow");
+  if(backRow) backRow.classList.toggle("hidden",isPublicStoreMode);
 }
 
 function setRecoveryMode(enabled){
@@ -1856,6 +1875,7 @@ async function signUp(){
 }
 
 async function signIn(){
+  if(isPublicStoreMode) return status("authStatus","Admin login is disabled in customer store mode. Open the base URL without ?shop=1 for admin access.",false);
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value;
   const {error}=await sb.auth.signInWithPassword({email,password});
@@ -2585,13 +2605,17 @@ function printDeliveryLabel(){
   window.print();
 }
 
-function openCustomerPortal(){
+function openCustomerPortal(isPublic=false){
+  isPublicStoreMode=Boolean(isPublic);
   document.getElementById("authCard").classList.add("hidden");
+  document.getElementById("app").classList.add("hidden");
   document.getElementById("customerPortal").classList.remove("hidden");
+  applyPortalMode();
   loadCustomerPortalInventory();
 }
 
 function closeCustomerPortal(){
+  if(isPublicStoreMode) return;
   document.getElementById("customerPortal").classList.add("hidden");
   document.getElementById("authCard").classList.remove("hidden");
 }
@@ -3690,6 +3714,7 @@ renderSelectedSizeInputs();
 toggleTransactionCustomerFields();
 updateDeliveryLabel();
 detectRecoveryMode();
+handleInitialPortalRoute();
 renderTransactionOrder();
 renderBulkArticleRows();
 
@@ -3702,6 +3727,7 @@ document.addEventListener("click",(event)=>{
 });
 
 sb.auth.getSession().then(async({data})=>{
+  if(isPublicStoreMode) return;
   if(data.session){
     document.getElementById("authCard").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
