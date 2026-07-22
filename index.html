@@ -1327,7 +1327,7 @@
         </div>
         <label>Order Notes</label><textarea id="portalNotes" placeholder="Any notes for this order"></textarea>
         <div id="portalBackRow" class="grid">
-          <div><button class="secondary" type="button" onclick="closeCustomerPortal()">Back To Admin Login</button></div>
+          <div><button id="portalBackLabel" class="secondary" type="button" onclick="closeCustomerPortal()">Back To Admin Login</button></div>
           <div><button class="primary" type="button" onclick="submitCustomerPortalOrder()">Place Order</button></div>
         </div>
         <div id="portalStatus" class="status"></div>
@@ -1767,6 +1767,7 @@ let portalCartItems=[];
 let referralFeatureEnabled=true;
 let extendedOrderSchemaAvailable=true;
 let isPublicStoreMode=false;
+let portalReturnTarget="auth";
 
 function getAuthRedirectUrl(){
   return `${location.origin}${location.pathname}`;
@@ -1788,6 +1789,10 @@ function handleInitialPortalRoute(){
 function applyPortalMode(){
   const backRow=document.getElementById("portalBackRow");
   if(backRow) backRow.classList.toggle("hidden",isPublicStoreMode);
+  const backLabel=document.getElementById("portalBackLabel");
+  if(backLabel){
+    backLabel.textContent=portalReturnTarget==="app" ? "Back To Admin Panel" : "Back To Admin Login";
+  }
 }
 
 function setRecoveryMode(enabled){
@@ -2005,7 +2010,7 @@ function openStoreLink(){
 }
 
 function previewStoreFromAdmin(){
-  openCustomerPortal(true);
+  openCustomerPortal(false,"app");
 }
 
 function toggleQuickMenu(event){
@@ -2665,8 +2670,9 @@ function printDeliveryLabel(){
   window.print();
 }
 
-function openCustomerPortal(isPublic=false){
+function openCustomerPortal(isPublic=false,returnTarget="auth"){
   isPublicStoreMode=Boolean(isPublic);
+  portalReturnTarget=returnTarget;
   document.getElementById("authCard").classList.add("hidden");
   document.getElementById("app").classList.add("hidden");
   document.getElementById("customerPortal").classList.remove("hidden");
@@ -2677,7 +2683,11 @@ function openCustomerPortal(isPublic=false){
 function closeCustomerPortal(){
   if(isPublicStoreMode) return;
   document.getElementById("customerPortal").classList.add("hidden");
-  document.getElementById("authCard").classList.remove("hidden");
+  if(portalReturnTarget==="app"){
+    document.getElementById("app").classList.remove("hidden");
+  }else{
+    document.getElementById("authCard").classList.remove("hidden");
+  }
 }
 
 async function loadCustomerPortalInventory(){
