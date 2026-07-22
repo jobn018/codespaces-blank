@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#172033" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Sufi Thread Inventory</title>
   <link rel="manifest" href="manifest.json">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -894,6 +897,138 @@
       width:auto;
     }
 
+    .payment-method-card,
+    .checkout-step,
+    .dashboard-alert,
+    .proof-preview-shell{
+      margin-top:14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff8f4;
+      padding:12px;
+    }
+
+    .payment-method-card strong,
+    .checkout-step h4,
+    .dashboard-alert strong{
+      color:var(--navy);
+    }
+
+    .checkout-step h4{
+      margin:0 0 8px;
+      font-size:20px;
+    }
+
+    .checkout-actions,
+    .dashboard-alert-actions,
+    .proof-card-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .checkout-actions button,
+    .dashboard-alert-actions button,
+    .proof-card-actions button,
+    .proof-card-actions a,
+    .checkout-actions a{
+      width:auto;
+      margin-top:0;
+      flex:1;
+      text-align:center;
+    }
+
+    .whatsapp-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:14px 16px;
+      border-radius:11px;
+      background:#1f9d59;
+      color:#fff;
+      font-weight:700;
+      text-decoration:none;
+      box-shadow:0 9px 20px rgba(31,157,89,.18);
+    }
+
+    .portal-proof-preview{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .portal-proof-preview img,
+    .proof-thumb{
+      width:100%;
+      max-width:220px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#f1e8e3;
+      object-fit:cover;
+      cursor:pointer;
+    }
+
+    .proof-thumb{
+      max-width:110px;
+      max-height:110px;
+    }
+
+    .proof-meta{
+      display:grid;
+      gap:8px;
+    }
+
+    .proof-grid{
+      display:grid;
+      grid-template-columns:auto 1fr;
+      gap:12px;
+      align-items:start;
+      margin-top:8px;
+    }
+
+    .dashboard-alert{
+      display:grid;
+      gap:8px;
+    }
+
+    .dashboard-alert-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .proof-modal{
+      position:fixed;
+      inset:0;
+      z-index:120;
+      background:rgba(18,32,63,.72);
+      display:grid;
+      place-items:center;
+      padding:20px;
+    }
+
+    .proof-modal-card{
+      background:#fffdfb;
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      width:min(92vw,920px);
+      max-height:90vh;
+      overflow:auto;
+      box-shadow:0 22px 50px rgba(16,22,40,.35);
+    }
+
+    .proof-modal-card img{
+      width:100%;
+      max-height:72vh;
+      object-fit:contain;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:#f5ebe5;
+    }
+
     .customer-meta{display:grid;gap:4px}
 
     .manage-card-actions button,
@@ -1295,12 +1430,12 @@
         <div id="portalCartItems" class="order-cart-items"></div>
 
         <label>Full Name</label><input id="portalName" placeholder="Customer full name">
-        <label>Phone</label><input id="portalPhone" placeholder="+92...">
+        <label>Phone</label><input id="portalPhone" placeholder="+1....">
         <label>Email</label><input id="portalEmail" type="email" placeholder="customer@email.com">
         <label>Address</label><textarea id="portalAddress" placeholder="House, street, area"></textarea>
         <div class="grid">
-          <div><label>City</label><input id="portalCity" placeholder="Karachi"></div>
-          <div><label>Postal Code</label><input id="portalPostal" placeholder="74000"></div>
+          <div><label>City</label><input id="portalCity" placeholder="....."></div>
+          <div><label>Postal Code</label><input id="portalPostal" placeholder="....."></div>
         </div>
         <div class="grid">
           <div>
@@ -1313,21 +1448,33 @@
             </select>
           </div>
           <div>
-            <label>Payment Method (Free Setup)</label>
-            <select id="portalPaymentMethod">
-              <option value="Email Transfer">Email Transfer</option>
-            </select>
-            <div class="delivery-hint">Pay via email transfer to <strong>kj@sufithread.com</strong> and share payment screenshot on WhatsApp <strong>6046575454</strong>.</div>
+            <label>Payment Method</label>
+            <input id="portalPaymentMethod" value="Email Transfer" readonly>
+            <div class="delivery-hint">Only email transfer is available. After submitting the order, the customer will be asked to upload the transaction screenshot and can also send it on WhatsApp.</div>
           </div>
         </div>
-        <div class="grid">
-          <div><label>Referral Code</label><input id="portalReferralCode" placeholder="Optional referral code"></div>
-          <div><label>Order Reference</label><input id="portalReference" placeholder="Optional reference"></div>
-        </div>
+        <label>Referral Code</label><input id="portalReferralCode" placeholder="Optional referral code">
         <label>Order Notes</label><textarea id="portalNotes" placeholder="Any notes for this order"></textarea>
-        <div id="portalBackRow" class="grid">
-          <div><button id="portalBackLabel" class="secondary" type="button" onclick="closeCustomerPortal()">Back To Admin Login</button></div>
-          <div><button class="primary" type="button" onclick="submitCustomerPortalOrder()">Place Order</button></div>
+        <div>
+          <button class="primary" type="button" onclick="submitCustomerPortalOrder()">Submit Order & Continue To Payment</button>
+        </div>
+        <div id="portalCheckoutStep" class="checkout-step hidden">
+          <h4>Complete Payment</h4>
+          <div id="portalCheckoutSummary" class="muted">Submit the order first to continue.</div>
+          <div class="payment-method-card">
+            <strong>Email Transfer</strong>
+            <div class="muted">Send the transfer to <strong>kj@sufithread.com</strong>.</div>
+            <div class="muted">WhatsApp support: <strong>+1 604 657 5454</strong></div>
+          </div>
+          <div class="checkout-actions">
+            <a id="portalWhatsappBtn" class="whatsapp-btn" href="https://wa.me/16046575454" target="_blank" rel="noreferrer">Send Screenshot On WhatsApp</a>
+          </div>
+          <label>Attach Transaction Screenshot</label><input id="portalPaymentProof" type="file" accept="image/*" onchange="renderPortalPaymentProofPreview()">
+          <div id="portalProofPreview" class="portal-proof-preview hidden"></div>
+          <div class="checkout-actions">
+            <button class="primary" type="button" onclick="completeCustomerPortalPayment()">Submit Payment Screenshot</button>
+            <button class="secondary" type="button" onclick="resetPortalCheckout()">Start New Order</button>
+          </div>
         </div>
         <div id="portalStatus" class="status"></div>
       </div>
@@ -1392,6 +1539,18 @@
         <div class="kpi">Low Stock Items<strong id="kpiLow">0</strong></div>
         <div class="kpi">Today's Activity<strong id="kpiToday">0</strong></div>
       </div>
+
+      <div id="dashboardOrderAlert" class="dashboard-alert hidden">
+        <div class="dashboard-alert-title">
+          <strong>Customer Order Alerts</strong>
+          <span id="dashboardOrderAlertTime" class="muted">Waiting for orders...</span>
+        </div>
+        <div id="dashboardOrderAlertBody" class="muted">New customer orders and screenshot confirmations will appear here while the admin panel is open.</div>
+        <div class="dashboard-alert-actions">
+          <button class="secondary" type="button" onclick="requestOrderNotificationPermission()">Enable Browser Alerts</button>
+          <button class="primary" type="button" onclick="refreshAdminOrderAlerts(true)">Refresh Alerts</button>
+        </div>
+      </div>
     </section>
 
     <section id="transaction" class="card hidden">
@@ -1420,10 +1579,8 @@
           </select>
         </div>
         <div>
-          <label>Payment Method (Free Setup)</label>
-          <select id="txPaymentMethod">
-            <option value="Email Transfer">Email Transfer</option>
-          </select>
+          <label>Payment Method</label>
+          <input id="txPaymentMethod" value="Email Transfer" readonly>
         </div>
       </div>
 
@@ -1433,12 +1590,12 @@
       </div>
 
       <div id="customerDeliveryFields" class="hidden">
-        <label>Customer Phone</label><input id="txPhone" placeholder="+92...">
+        <label>Customer Phone</label><input id="txPhone" placeholder="+1....">
         <label>Customer Email</label><input id="txEmail" type="email" placeholder="customer@email.com">
         <label>Customer Address</label><textarea id="txAddress" placeholder="House, street, area, city, postal code"></textarea>
         <div class="grid">
-          <div><label>City</label><input id="txCity" placeholder="Karachi"></div>
-          <div><label>Postal Code</label><input id="txPostal" placeholder="74000"></div>
+          <div><label>City</label><input id="txCity" placeholder="Location"></div>
+          <div><label>Postal Code</label><input id="txPostal" placeholder="....."></div>
         </div>
         <div class="delivery-hint">After saving Stock Out, these details will be copied into Delivery Label so you can print immediately.</div>
       </div>
@@ -1627,6 +1784,17 @@
       </div>
     </section>
 
+    <div id="proofModal" class="proof-modal hidden" onclick="closeProofModal()">
+      <div class="proof-modal-card" onclick="event.stopPropagation()">
+        <div class="dashboard-alert-title">
+          <strong>Payment Screenshot</strong>
+          <button class="secondary" type="button" onclick="closeProofModal()">Close</button>
+        </div>
+        <div id="proofModalMeta" class="muted" style="margin:8px 0 14px">No screenshot selected.</div>
+        <img id="proofModalImage" alt="Payment screenshot preview">
+      </div>
+    </div>
+
     <section id="referralPartners" class="card hidden">
       <div class="section-title"><h2>Referral Partners</h2></div>
       <div class="muted">Create referral codes for your hired team. Every customer order with that code is tracked automatically by articles sold, order type, and customer details.</div>
@@ -1743,6 +1911,11 @@
 const SUPABASE_URL = "https://wfoputgrjortobtpczce.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmb3B1dGdyam9ydG9idHBjemNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NzI4MDIsImV4cCI6MjA5OTU0ODgwMn0.ITHlM1cLHPdHX25lmxsA_jfebUu0G3Q56VKyhg3u6BQ";
 const ADMIN_EMAIL = "kj@sufithread.com";
+const CANONICAL_STOREFRONT_URL = "https://jobn018.github.io/codespaces-blank/?shop=1";
+const STORE_WHATSAPP_NUMBER = "16046575454";
+const STORE_WHATSAPP_DISPLAY = "+1 604 657 5454";
+const ORDER_META_PREFIX = "[[ORDER_META:";
+const PAYMENT_PROOF_PREFIX = "[[PAYMENT_PROOF:";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let productsCache=[];
 let inventoryProductsCache=[];
@@ -1765,6 +1938,10 @@ let referralFeatureEnabled=true;
 let extendedOrderSchemaAvailable=true;
 let isPublicStoreMode=false;
 let portalReturnTarget="auth";
+let pendingPortalCheckout=null;
+let adminOrderAlertTimer=null;
+let adminOrderAlertReady=false;
+let knownAdminOrderKeys=new Set();
 
 function getAuthRedirectUrl(){
   return `${location.origin}${location.pathname}`;
@@ -1784,12 +1961,308 @@ function handleInitialPortalRoute(){
 }
 
 function applyPortalMode(){
-  const backRow=document.getElementById("portalBackRow");
-  if(backRow) backRow.classList.toggle("hidden",isPublicStoreMode);
-  const backLabel=document.getElementById("portalBackLabel");
-  if(backLabel){
-    backLabel.textContent=portalReturnTarget==="app" ? "Back To Admin Panel" : "Back To Admin Login";
+  void isPublicStoreMode;
+  void portalReturnTarget;
+}
+
+function buildWhatsAppOrderMessage(orderId, customerName){
+  const name=customerName || "customer";
+  const orderText=orderId ? ` for order ${orderId}` : "";
+  return `Hello Sufi Thread, I have completed the email transfer${orderText}. My name is ${name} and I am sending the payment screenshot.`;
+}
+
+function buildWhatsAppUrl(orderId, customerName){
+  return `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${encodeURIComponent(buildWhatsAppOrderMessage(orderId,customerName))}`;
+}
+
+function extractOrderMetaId(notes){
+  const match=String(notes||"").match(/\[\[ORDER_META:([^\]]+)\]\]/);
+  return match?.[1] || "";
+}
+
+function extractPaymentProofMeta(notes){
+  const match=String(notes||"").match(/\[\[PAYMENT_PROOF:([^\]]+)\]\]([\s\S]*)$/);
+  if(!match) return null;
+  return {
+    uploadedAt:match[1] || "",
+    proofUrl:(match[2]||"").trim()
+  };
+}
+
+function stripHiddenOrderMetadata(notes){
+  return String(notes||"")
+    .replace(/\n?\[\[ORDER_META:[^\]]+\]\]/g,"")
+    .replace(/\n?\[\[PAYMENT_PROOF:[^\]]+\]\][\s\S]*$/g,"")
+    .trim();
+}
+
+function appendOrderMetaToNotes(notes, orderId){
+  const clean=stripHiddenOrderMetadata(notes);
+  const parts=[];
+  if(clean) parts.push(clean);
+  if(orderId) parts.push(`${ORDER_META_PREFIX}${orderId}]]`);
+  return parts.join("\n");
+}
+
+function appendPaymentProofToNotes(notes, proofUrl, uploadedAt){
+  const clean=stripHiddenOrderMetadata(notes);
+  const orderId=extractOrderMetaId(notes);
+  const parts=[];
+  if(clean) parts.push(clean);
+  if(orderId) parts.push(`${ORDER_META_PREFIX}${orderId}]]`);
+  if(proofUrl) parts.push(`${PAYMENT_PROOF_PREFIX}${uploadedAt || new Date().toISOString()}]]${proofUrl}`);
+  return parts.join("\n");
+}
+
+function resetPortalCheckout(){
+  pendingPortalCheckout=null;
+  const step=document.getElementById("portalCheckoutStep");
+  const summary=document.getElementById("portalCheckoutSummary");
+  const input=document.getElementById("portalPaymentProof");
+  const preview=document.getElementById("portalProofPreview");
+  const whatsapp=document.getElementById("portalWhatsappBtn");
+  if(step) step.classList.add("hidden");
+  if(summary) summary.textContent="Submit the order first to continue.";
+  if(input) input.value="";
+  if(preview){
+    preview.innerHTML="";
+    preview.classList.add("hidden");
   }
+  if(whatsapp) whatsapp.href=`https://wa.me/${STORE_WHATSAPP_NUMBER}`;
+  clearPortalOrderForm();
+}
+
+function renderPortalPaymentProofPreview(){
+  const input=document.getElementById("portalPaymentProof");
+  const preview=document.getElementById("portalProofPreview");
+  const file=input?.files?.[0];
+  if(!preview) return;
+  if(!file){
+    preview.innerHTML="";
+    preview.classList.add("hidden");
+    return;
+  }
+  const objectUrl=URL.createObjectURL(file);
+  preview.classList.remove("hidden");
+  preview.innerHTML=`
+    <div class="muted">Selected screenshot: ${file.name}</div>
+    <img src="${objectUrl}" alt="Selected payment screenshot" onclick="openProofModal('${objectUrl}','Selected payment screenshot')">
+  `;
+}
+
+function showPortalCheckout(orderDetails){
+  pendingPortalCheckout=orderDetails;
+  const step=document.getElementById("portalCheckoutStep");
+  const summary=document.getElementById("portalCheckoutSummary");
+  const whatsapp=document.getElementById("portalWhatsappBtn");
+  if(step) step.classList.remove("hidden");
+  if(summary){
+    const totalAmount=Number(orderDetails.totalAmount||0).toFixed(2);
+    summary.textContent=`Order submitted for ${orderDetails.customerName}. ${orderDetails.totalItems} article(s), total ${totalAmount}. Complete the email transfer, then upload or send the screenshot.`;
+  }
+  if(whatsapp) whatsapp.href=buildWhatsAppUrl(orderDetails.orderId,orderDetails.customerName);
+}
+
+function fileToImageDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(String(reader.result||""));
+    reader.onerror=()=>reject(new Error("Could not read the payment screenshot."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImageElement(src){
+  return new Promise((resolve,reject)=>{
+    const image=new Image();
+    image.onload=()=>resolve(image);
+    image.onerror=()=>reject(new Error("Could not process the payment screenshot."));
+    image.src=src;
+  });
+}
+
+async function buildInlinePaymentProof(file){
+  const source=await fileToImageDataUrl(file);
+  const image=await loadImageElement(source);
+  const maxSide=1280;
+  const scale=Math.min(1,maxSide/Math.max(image.width||1,image.height||1));
+  const width=Math.max(1,Math.round(image.width*scale));
+  const height=Math.max(1,Math.round(image.height*scale));
+  const canvas=document.createElement("canvas");
+  canvas.width=width;
+  canvas.height=height;
+  const ctx=canvas.getContext("2d");
+  if(!ctx) throw new Error("Could not prepare the payment screenshot.");
+  ctx.drawImage(image,0,0,width,height);
+  return canvas.toDataURL("image/jpeg",0.82);
+}
+
+async function uploadPaymentProof(file, orderId){
+  if(!file) return null;
+  const ext=(file.name.split(".").pop()||"jpg").toLowerCase();
+  const safeOrder=(orderId||"order").replace(/[^a-z0-9_-]/gi,"-").toLowerCase();
+  const path=`${safeOrder}-${Date.now()}.${ext}`;
+  const {error}=await sb.storage.from("payment-proofs").upload(path,file,{upsert:false});
+  if(!error) return sb.storage.from("payment-proofs").getPublicUrl(path).data.publicUrl;
+
+  const message=String(error?.message||"").toLowerCase();
+  const bucketMissing=message.includes("bucket") && (message.includes("not found") || message.includes("does not exist"));
+  const storageBlocked=message.includes("row-level security") || message.includes("permission") || message.includes("unauthorized");
+  if(bucketMissing || storageBlocked){
+    return buildInlinePaymentProof(file);
+  }
+
+  throw error;
+}
+
+async function completeCustomerPortalPayment(){
+  try{
+    if(!pendingPortalCheckout?.orderId) throw new Error("Submit the order first.");
+    const file=document.getElementById("portalPaymentProof")?.files?.[0];
+    if(!file) throw new Error("Attach the payment screenshot first.");
+    const proofUrl=await uploadPaymentProof(file,pendingPortalCheckout.orderId);
+    const uploadedAt=new Date().toISOString();
+    const payload={
+      payment_status:"Proof Shared",
+      proof_screenshot_url:proofUrl,
+      proof_uploaded_at:uploadedAt
+    };
+    const {error}=await sb.from("stock_transactions").update(payload).eq("order_id",pendingPortalCheckout.orderId);
+    if(error){
+      if(isMissingStockColumnError(error)){
+        const legacyNotes=appendPaymentProofToNotes(pendingPortalCheckout.rawNotes||"",proofUrl,uploadedAt);
+        const {error:legacyError}=await sb
+          .from("stock_transactions")
+          .update({notes:legacyNotes})
+          .like("notes",`%${ORDER_META_PREFIX}${pendingPortalCheckout.orderId}]]%`);
+        if(legacyError) throw legacyError;
+      }else{
+        throw error;
+      }
+    }
+    status("portalStatus","Payment screenshot saved with the order. You can also use the WhatsApp button to send it directly.");
+  }catch(e){status("portalStatus",e.message,false)}
+}
+
+function openProofModal(url,label="Payment screenshot"){
+  const modal=document.getElementById("proofModal");
+  const image=document.getElementById("proofModalImage");
+  const meta=document.getElementById("proofModalMeta");
+  if(!modal || !image || !meta || !url) return;
+  image.src=url;
+  meta.textContent=label;
+  modal.classList.remove("hidden");
+}
+
+function closeProofModal(){
+  const modal=document.getElementById("proofModal");
+  const image=document.getElementById("proofModalImage");
+  const meta=document.getElementById("proofModalMeta");
+  if(image) image.removeAttribute("src");
+  if(meta) meta.textContent="No screenshot selected.";
+  if(modal) modal.classList.add("hidden");
+}
+
+async function requestOrderNotificationPermission(){
+  if(!("Notification" in window)){
+    const body=document.getElementById("dashboardOrderAlertBody");
+    if(body) body.textContent="This browser does not support notifications. In-app alerts remain available.";
+    return;
+  }
+  const permission=await Notification.requestPermission();
+  const ok=permission==="granted";
+  const body=document.getElementById("dashboardOrderAlertBody");
+  if(body){
+    body.textContent=ok
+      ? "Browser alerts enabled. New customer orders and screenshot confirmations will trigger notifications while this page is open."
+      : "Browser alerts were not enabled. In-app order alerts will still appear here.";
+  }
+}
+
+async function refreshAdminOrderAlerts(allowBrowserNotification=false){
+  const alertBox=document.getElementById("dashboardOrderAlert");
+  const alertBody=document.getElementById("dashboardOrderAlertBody");
+  const alertTime=document.getElementById("dashboardOrderAlertTime");
+  if(!alertBox || !alertBody || !alertTime) return;
+
+  let result=await sb
+    .from("stock_transactions")
+    .select("id,order_id,party,payment_status,proof_screenshot_url,created_at")
+    .eq("transaction_type","OUT")
+    .order("created_at",{ascending:false})
+    .limit(40);
+
+  if(result.error && isMissingStockColumnError(result.error)){
+    extendedOrderSchemaAvailable=false;
+    result=await sb
+      .from("stock_transactions")
+      .select("id,party,created_at")
+      .eq("transaction_type","OUT")
+      .order("created_at",{ascending:false})
+      .limit(40);
+  }
+
+  if(result.error){
+    alertBox.classList.remove("hidden");
+    alertBody.textContent=result.error.message;
+    alertTime.textContent="Alert unavailable";
+    return;
+  }
+
+  const rows=result.data||[];
+  if(!rows.length){
+    alertBox.classList.remove("hidden");
+    alertBody.textContent="No customer orders yet.";
+    alertTime.textContent="Waiting for orders...";
+    adminOrderAlertReady=true;
+    return;
+  }
+
+  const grouped=[];
+  const seenGroupKeys=new Set();
+  rows.forEach(row=>{
+    const key=row.order_id || row.id;
+    if(seenGroupKeys.has(key)) return;
+    seenGroupKeys.add(key);
+    grouped.push({
+      key,
+      party:row.party||"Customer",
+      payment_status:row.payment_status||"Pending",
+      proof_screenshot_url:row.proof_screenshot_url||"",
+      created_at:row.created_at
+    });
+  });
+
+  const newOrders=adminOrderAlertReady
+    ? grouped.filter(order=>!knownAdminOrderKeys.has(order.key))
+    : [];
+  knownAdminOrderKeys=new Set(grouped.map(order=>order.key));
+  adminOrderAlertReady=true;
+
+  const pendingCount=grouped.filter(order=>String(order.payment_status||"").toLowerCase()!=="proof shared").length;
+  const proofCount=grouped.filter(order=>String(order.payment_status||"").toLowerCase()==="proof shared").length;
+  const latest=grouped[0];
+  alertBox.classList.remove("hidden");
+  alertTime.textContent=`Last order: ${new Date(latest.created_at).toLocaleString()}`;
+  alertBody.innerHTML=`
+    <strong>${grouped.length}</strong> recent order group(s) tracked. Pending payment proof: <strong>${pendingCount}</strong>. Screenshot shared: <strong>${proofCount}</strong>.<br>
+    Latest customer: <strong>${latest.party}</strong>. WhatsApp: <strong>${STORE_WHATSAPP_DISPLAY}</strong>.
+  `;
+
+  if(allowBrowserNotification && newOrders.length && "Notification" in window && Notification.permission==="granted"){
+    const newest=newOrders[0];
+    new Notification("New customer order",{
+      body:`${newest.party} placed an order. Payment status: ${newest.payment_status || "Pending"}.`
+    });
+  }
+}
+
+function startAdminOrderAlertPolling(){
+  if(adminOrderAlertTimer) clearInterval(adminOrderAlertTimer);
+  refreshAdminOrderAlerts(false);
+  adminOrderAlertTimer=setInterval(()=>{
+    refreshAdminOrderAlerts(true);
+  },60000);
 }
 
 function setRecoveryMode(enabled){
@@ -1904,6 +2377,7 @@ async function signIn(){
   document.getElementById("authCard").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   await Promise.all([loadProducts(),loadDashboard(),loadCustomers()]);
+  startAdminOrderAlertPolling();
 }
 
 async function sendResetLink(){
@@ -1974,7 +2448,7 @@ function navigateTo(id,btn){
 }
 
 function getStorefrontLink(){
-  return `${location.origin}${location.pathname}?shop=1`;
+  return CANONICAL_STOREFRONT_URL;
 }
 
 function loadStoreManager(){
@@ -2670,6 +3144,7 @@ function printDeliveryLabel(){
 function openCustomerPortal(isPublic=false,returnTarget="auth"){
   isPublicStoreMode=Boolean(isPublic);
   portalReturnTarget=returnTarget;
+  resetPortalCheckout();
   document.getElementById("authCard").classList.add("hidden");
   document.getElementById("app").classList.add("hidden");
   document.getElementById("customerPortal").classList.remove("hidden");
@@ -2805,7 +3280,7 @@ function renderPortalCart(){
 function clearPortalOrderForm(){
   portalCartItems=[];
   renderPortalCart();
-  ["portalName","portalPhone","portalEmail","portalAddress","portalCity","portalPostal","portalReferralCode","portalReference","portalNotes"].forEach(id=>{
+  ["portalName","portalPhone","portalEmail","portalAddress","portalCity","portalPostal","portalReferralCode","portalNotes"].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.value="";
   });
@@ -2825,15 +3300,17 @@ async function submitCustomerPortalOrder(){
     const city=document.getElementById("portalCity").value.trim();
     const postal_code=document.getElementById("portalPostal").value.trim();
     const order_type=document.getElementById("portalOrderType").value;
-    const payment_method=document.getElementById("portalPaymentMethod").value;
+    const payment_method="Email Transfer";
     const payment_status="Pending";
     const notes=document.getElementById("portalNotes").value.trim();
-    const reference=document.getElementById("portalReference").value.trim();
     const referral_code=normalizeReferralCode(document.getElementById("portalReferralCode").value);
     if(!party || !phone || !address) throw new Error("Name, phone, and address are required.");
 
     const referralPartner=await resolveReferralPartner(referral_code);
     const order_id=generateOrderId("WEB");
+    const storedNotes=appendOrderMetaToNotes(notes,order_id);
+    const totalItems=portalCartItems.reduce((sum,item)=>sum+Number(item.quantity||0),0);
+    const totalAmount=portalCartItems.reduce((sum,item)=>sum+(Number(item.quantity||0)*Number(item.unit_price||0)),0);
 
     const rows=portalCartItems.map(item=>({
       product_id:item.product_id,
@@ -2842,8 +3319,8 @@ async function submitCustomerPortalOrder(){
       quantity:Number(item.quantity||0),
       unit_price:Number(item.unit_price||0),
       party,
-      reference:reference || order_id,
-      notes,
+      reference:null,
+      notes:storedNotes,
       phone,
       email,
       address,
@@ -2861,9 +3338,11 @@ async function submitCustomerPortalOrder(){
     await applyTransactionRowsToProducts(rows);
     await loadCustomerPortalInventory();
 
+    showPortalCheckout({orderId:order_id,customerName:party,totalItems,totalAmount});
+    pendingPortalCheckout.rawNotes=storedNotes;
     status("portalStatus",insertResult.usedLegacySchema
-      ? `Order placed successfully (${order_id}). Run schema.sql in Supabase to enable full referral/order analytics.`
-      : `Order placed successfully. Your order number is ${order_id}.`);
+      ? "Order submitted. Complete payment below. Run schema.sql in Supabase to enable payment screenshot tracking."
+      : "Order submitted. Complete payment below by email transfer and upload the screenshot.");
     clearPortalOrderForm();
   }catch(e){status("portalStatus",e.message,false)}
 }
@@ -3544,7 +4023,7 @@ async function loadCustomers(){
   const prodQuery=sb.from("products").select("id,sku,name,category,colour,size,article_details,size_details,opening_stock,cost_price,selling_price,reorder_level,image_url,gallery_images");
   const txModernQuery=sb
     .from("stock_transactions")
-    .select("id,product_id,size,transaction_type,quantity,party,reference,notes,phone,email,address,city,postal_code,order_type,payment_method,payment_status,referral_code,created_at")
+    .select("id,product_id,size,transaction_type,quantity,party,reference,notes,phone,email,address,city,postal_code,order_type,payment_method,payment_status,referral_code,order_id,proof_screenshot_url,proof_uploaded_at,created_at")
     .eq("transaction_type","OUT")
     .order("created_at",{ascending:false});
 
@@ -3602,11 +4081,14 @@ async function loadCustomers(){
       quantity:Number(tx.quantity||0),
       created_at:tx.created_at,
       category:product.category||"",
-      notes:tx.notes||"",
+      notes:stripHiddenOrderMetadata(tx.notes||""),
       reference:tx.reference||""
       ,order_type:tx.order_type||""
+      ,order_id:tx.order_id||extractOrderMetaId(tx.notes||"")||""
       ,payment_method:tx.payment_method||""
       ,payment_status:tx.payment_status||""
+      ,proof_screenshot_url:tx.proof_screenshot_url||(extractPaymentProofMeta(tx.notes||"")?.proofUrl)||""
+      ,proof_uploaded_at:tx.proof_uploaded_at||(extractPaymentProofMeta(tx.notes||"")?.uploadedAt)||""
       ,referral_code:normalizeReferralCode(tx.referral_code||"")
       ,city:tx.city||""
       ,postal_code:tx.postal_code||""
@@ -3721,12 +4203,27 @@ function renderCustomers(){
           <span class="customer-article-badge">Size ${item.size || "-"}</span>
           ${item.order_type ? `<span class="customer-article-badge">Order: ${item.order_type}</span>` : ""}
           ${item.payment_method ? `<span class="customer-article-badge">Payment: ${item.payment_method}</span>` : ""}
+          ${item.payment_status ? `<span class="customer-article-badge">Status: ${item.payment_status}</span>` : ""}
           ${item.referral_code ? `<span class="customer-article-badge">Referral: ${item.referral_code}</span>` : ""}
         </div>
         <div class="muted">Articles bought: ${item.quantity}</div>
         <div class="muted">Date: ${new Date(item.created_at).toLocaleString()}</div>
-        <div class="muted">${item.reference ? `Ref: ${item.reference}` : ""}</div>
+        <div class="muted">${item.order_id ? `Order ID: ${item.order_id}` : ""}</div>
         <div class="muted">${item.notes ? item.notes : ""}</div>
+        ${item.proof_screenshot_url ? `
+          <div class="proof-preview-shell">
+            <strong>Payment Screenshot</strong>
+            <div class="proof-grid">
+              <img class="proof-thumb" src="${item.proof_screenshot_url}" alt="Payment screenshot for ${item.name}" onclick="openProofModal('${item.proof_screenshot_url}','${(item.order_id || item.name).replace(/'/g,"&#39;")}')">
+              <div class="proof-meta">
+                <div class="muted">${item.proof_uploaded_at ? `Uploaded: ${new Date(item.proof_uploaded_at).toLocaleString()}` : "Screenshot shared by customer."}</div>
+                <div class="proof-card-actions">
+                  <button class="secondary" type="button" onclick="openProofModal('${item.proof_screenshot_url}','${(item.order_id || item.name).replace(/'/g,"&#39;")}')">Enlarge Screenshot</button>
+                  <a class="whatsapp-btn" href="${buildWhatsAppUrl(item.order_id,item.name)}" target="_blank" rel="noreferrer">Open WhatsApp</a>
+                </div>
+              </div>
+            </div>
+          </div>` : ""}
         <button class="customer-item-link" type="button" onclick="openCustomerArticle('${item.product_id || ""}')">View Article</button>
       </div>
     `;
@@ -3764,6 +4261,7 @@ async function loadDashboard(){
 
   const today=document.getElementById("kpiToday");
   if(today) today.textContent=todayRes.error?0:(todayRes.count||0);
+  await refreshAdminOrderAlerts(false);
 }
 
 async function exportCSV(){
@@ -3798,7 +4296,8 @@ sb.auth.getSession().then(async({data})=>{
   if(data.session){
     document.getElementById("authCard").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
-    await Promise.all([loadProducts(),loadDashboard()]);
+    await Promise.all([loadProducts(),loadDashboard(),loadCustomers()]);
+    startAdminOrderAlertPolling();
   }
 });
 if("serviceWorker" in navigator){
@@ -3809,7 +4308,7 @@ if("serviceWorker" in navigator){
     location.reload();
   });
 
-  navigator.serviceWorker.register("service-worker.js?v=14").then((registration)=>{
+  navigator.serviceWorker.register("service-worker.js?v=16").then((registration)=>{
     registration.update();
 
     if(registration.waiting){

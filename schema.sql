@@ -37,6 +37,8 @@ create table if not exists stock_transactions (
   order_type text,
   payment_method text,
   payment_status text,
+  proof_screenshot_url text,
+  proof_uploaded_at timestamptz,
   referral_code text,
   referral_partner_id uuid,
   created_at timestamptz default now()
@@ -84,6 +86,8 @@ alter table stock_transactions add column if not exists order_id text;
 alter table stock_transactions add column if not exists order_type text;
 alter table stock_transactions add column if not exists payment_method text;
 alter table stock_transactions add column if not exists payment_status text;
+alter table stock_transactions add column if not exists proof_screenshot_url text;
+alter table stock_transactions add column if not exists proof_uploaded_at timestamptz;
 alter table stock_transactions add column if not exists referral_code text;
 alter table stock_transactions add column if not exists referral_partner_id uuid;
 alter table stock_transactions add column if not exists created_at timestamptz default now();
