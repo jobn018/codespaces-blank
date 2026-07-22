@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sufi-thread-inventory-v12';
+const CACHE_NAME = 'sufi-thread-inventory-v13';
 const ASSETS = [
   './',
   './index.html',
